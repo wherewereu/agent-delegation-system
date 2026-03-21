@@ -68,13 +68,13 @@ User Request
     ┌──────────┼──────────┬───────────┬──────────┐
     ▼          ▼          ▼           ▼          ▼
 ┌────────┐ ┌───────┐ ┌───────┐ ┌────────┐ ┌───────┐
-│ Archie │ │ Merc  │ │ Eris  │ │  Atro  │ │ Herc  │
-│Research│ │  Comms│ │ Procure│ │Calendar│ │ Health│
+│ Archie │ │ Merc  │ │ Eris  │ │  Atro  │ │  Herc │
+│Research│ │  Comms│ │Procure│ │Calendar│ │Health │
 └────────┘ └───┬───┘ └───┬───┘ └────────┘ └───┬───┘
                │          │                    │
                ▼          ▼                    ▼
           ┌────────┐ ┌───────┐           ┌────────┐
-          │  Email │ │ Instacart      │ Reminders│
+          │  Email │ │Instacart       │Reminders│
           └────────┘ └───────┘           └────────┘
 
     ┌──────────┐                    ┌────────┐
@@ -291,17 +291,7 @@ Quality assurance and code review.
 
 ## Discord Setup
 
-This system uses Discord as its **command center** — every agent posts delegation events, task completions, and errors to dedicated Discord channels. Before the system runs, you need a Discord server, a bot application, and all agents configured with their channel IDs.
-
----
-
-### Server
-
-| Property | Value |
-|---|---|
-| **Server Name** | Milo's Enterprise |
-| **Server ID** | `1483891024974840038` |
-| **Bot App ID** | `1483871309677985953` |
+This system uses Discord as its **command center** — every agent posts delegation events, task completions, and errors to dedicated Discord channels. Before the system runs, you need a Discord server, a bot application per agent, and all channels configured.
 
 ---
 
@@ -313,9 +303,49 @@ This system uses Discord as its **command center** — every agent posts delegat
 
 ---
 
+### How to Get Your Discord Values
+
+This system uses three types of values you'll need to gather from Discord:
+
+#### 🆔 Getting Channel IDs
+
+**Option 1 — Copy from channel link (easiest)**
+1. Enable Developer Mode: `User Settings` → `Advanced` → `Developer Mode` (toggle ON)
+2. Right-click the channel name in the sidebar
+3. Select **Copy Channel ID**
+
+**Option 2 — Use a bot**
+1. Add a bot like `@username_to_id_bot` to your server
+2. Go to the channel and send a message like `@username_to_id_bot` with the channel mention
+3. The bot will reply with the channel ID
+
+**Option 3 — Group DM**
+1. Create a Group DM with the bot
+2. Right-click the group → **Copy ID** (requires Developer Mode)
+
+> **Note:** You must have Developer Mode enabled to copy IDs. Look for "Copy Channel ID" in the right-click menu.
+
+#### 🤖 Getting Bot Tokens
+
+1. Go to [discord.com/developers](https://discord.com/developers) → **Applications** → **New Application**
+2. Name your application (e.g., `Milo`) → click **Create**
+3. On the left sidebar, click **Bot**
+4. Click **Reset Token** to generate a new bot token
+5. **Copy and save the token immediately** — Discord only shows it once!
+
+> ⚠️ Never commit bot tokens to version control. Use a secrets manager or environment variables.
+
+#### 🏠 Getting Your Server ID
+
+1. Enable Developer Mode: `User Settings` → `Advanced` → `Developer Mode` (toggle ON)
+2. Right-click your server name in the sidebar
+3. Select **Copy Server ID**
+
+---
+
 ### Step 1 — Create a Discord Application for Each Agent
 
-Each agent needs its own Discord application and bot token. Create one application per agent: **Milo, Archie, Merc, Eris, Atro, Herc, Heph, Theo**.
+Each agent needs its own Discord application and bot token. Create one application per agent: **Milo, Archie, Merc, Eris, Atro, Herc, Heph, Theo.**
 
 1. Go to [discord.com/developers](https://discord.com/developers) → **Applications** → **New Application**
 2. Give it a name (e.g., `Milo`) → click **Create**
@@ -331,18 +361,18 @@ Each agent needs its own Discord application and bot token. Create one applicati
 
 ### Step 2 — Set Up Channels
 
-Each agent has three dedicated channels:
+Create the following channels on your Discord server. Each agent has three dedicated channels:
 
 | Agent | Output Channel ID | Logs Channel ID | Memory Channel ID |
 |---|---|---|---|
-| **Command Center** (Milo) | `1483891285822537740` | — | — |
-| **Archimedes** (archie) | `1483891301773480017` | `1483893552877535354` | `1483893553993093231` |
-| **Mercury** (merc) | `1483891383700820132` | `1483893677301436507` | `1483893678073188417` |
-| **Eris** | `1483891385458491402` | `1483893679952232530` | `1483893681193746616` |
-| **Atropos** (atro) | `1483891386783629322` | `1483893682514956460` | `1483893683605475348` |
-| **Heracles** (herc) | `1483891388184526919` | `1483893684595458200` | `1483893685539176651` |
-| **Hephaestus** (heph) | `1483944411795816641` | — | — |
-| **Themis** (theo) | `1483944415985930300` | — | — |
+| **Command Center** (Milo) | `CHANNEL_ID_COMMAND_CENTER` | — | — |
+| **Archimedes** (archie) | `CHANNEL_ID_ARCHIE_OUTPUT` | `CHANNEL_ID_ARCHIE_LOGS` | `CHANNEL_ID_ARCHIE_MEMORY` |
+| **Mercury** (merc) | `CHANNEL_ID_MERC_OUTPUT` | `CHANNEL_ID_MERC_LOGS` | `CHANNEL_ID_MERC_MEMORY` |
+| **Eris** | `CHANNEL_ID_ERIS_OUTPUT` | `CHANNEL_ID_ERIS_LOGS` | `CHANNEL_ID_ERIS_MEMORY` |
+| **Atropos** (atro) | `CHANNEL_ID_ATRO_OUTPUT` | `CHANNEL_ID_ATRO_LOGS` | `CHANNEL_ID_ATRO_MEMORY` |
+| **Heracles** (herc) | `CHANNEL_ID_HERC_OUTPUT` | `CHANNEL_ID_HERC_LOGS` | `CHANNEL_ID_HERC_MEMORY` |
+| **Hephaestus** (heph) | `CHANNEL_ID_HEPH_OUTPUT` | — | — |
+| **Themis** (theo) | `CHANNEL_ID_THEO_OUTPUT` | — | — |
 
 > Enable Developer Mode in Discord to right-click channels and **Copy Channel ID**.
 
@@ -355,46 +385,49 @@ Each agent has three dedicated channels:
 
 ### Step 3 — Configure the Token and Channel File
 
-Create `~/.openclaw/agent-bot-tokens.json`:
+Create `~/.openclaw/agent-bot-tokens.json`. Replace all placeholder values with your actual IDs and tokens:
 
 ```json
 {
-  "guild_id": "1483891024974840038",
-  "round_table_channel": "1483982757523750942",
+  "guild_id": "YOUR_SERVER_ID",
+  "round_table_channel": "CHANNEL_ID_ROUND_TABLE",
+  "break_room_channel": "CHANNEL_ID_BREAK_ROOM",
   "bots": {
-    "Milo":    "YOUR_MILO_BOT_TOKEN",
-    "Archie":  "YOUR_ARCHIE_BOT_TOKEN",
-    "Merc":    "YOUR_MERC_BOT_TOKEN",
-    "Eris":    "YOUR_ERIS_BOT_TOKEN",
-    "Atro":    "YOUR_ATRO_BOT_TOKEN",
-    "Herc":    "YOUR_HERC_BOT_TOKEN",
-    "Heph":    "YOUR_HEPH_BOT_TOKEN",
-    "Theo":    "YOUR_THEO_BOT_TOKEN"
+    "Milo":    "BOT_TOKEN_MILO",
+    "Archie":  "BOT_TOKEN_ARCHIE",
+    "Merc":    "BOT_TOKEN_MERC",
+    "Eris":    "BOT_TOKEN_ERIS",
+    "Atro":    "BOT_TOKEN_ATRO",
+    "Herc":    "BOT_TOKEN_HERC",
+    "Heph":    "BOT_TOKEN_HEPH",
+    "Theo":    "BOT_TOKEN_THEO"
   },
   "channels": {
-    "command-center":        "1483891285822537740",
-    "archie-output":          "1483891301773480017",
-    "archie-logs":           "1483893552877535354",
-    "archie-memory":         "1483893553993093231",
-    "merc-output":           "1483891383700820132",
-    "merc-logs":             "1483893677301436507",
-    "merc-memory":           "1483893678073188417",
-    "eris-output":           "1483891385458491402",
-    "eris-logs":             "1483893679952232530",
-    "eris-memory":          "1483893681193746616",
-    "atro-output":           "1483891386783629322",
-    "atro-logs":             "1483893682514956460",
-    "atro-memory":          "1483893683605475348",
-    "herc-output":           "1483891388184526919",
-    "herc-logs":             "1483893684595458200",
-    "herc-memory":          "1483893685539176651",
-    "heph-output":           "1483944411795816641",
-    "theo-output":           "1483944415985930300",
-    "round-table":           "1483982757523750942",
-    "break-room":            "1485043346132045824"
+    "command-center":        "CHANNEL_ID_COMMAND_CENTER",
+    "archie-output":         "CHANNEL_ID_ARCHIE_OUTPUT",
+    "archie-logs":          "CHANNEL_ID_ARCHIE_LOGS",
+    "archie-memory":        "CHANNEL_ID_ARCHIE_MEMORY",
+    "merc-output":          "CHANNEL_ID_MERC_OUTPUT",
+    "merc-logs":            "CHANNEL_ID_MERC_LOGS",
+    "merc-memory":          "CHANNEL_ID_MERC_MEMORY",
+    "eris-output":          "CHANNEL_ID_ERIS_OUTPUT",
+    "eris-logs":            "CHANNEL_ID_ERIS_LOGS",
+    "eris-memory":          "CHANNEL_ID_ERIS_MEMORY",
+    "atro-output":          "CHANNEL_ID_ATRO_OUTPUT",
+    "atro-logs":            "CHANNEL_ID_ATRO_LOGS",
+    "atro-memory":          "CHANNEL_ID_ATRO_MEMORY",
+    "herc-output":          "CHANNEL_ID_HERC_OUTPUT",
+    "herc-logs":            "CHANNEL_ID_HERC_LOGS",
+    "herc-memory":          "CHANNEL_ID_HERC_MEMORY",
+    "heph-output":          "CHANNEL_ID_HEPH_OUTPUT",
+    "theo-output":          "CHANNEL_ID_THEO_OUTPUT",
+    "round-table":          "CHANNEL_ID_ROUND_TABLE",
+    "break-room":           "CHANNEL_ID_BREAK_ROOM"
   }
 }
 ```
+
+> ⚠️ **Keep this file secure.** It contains bot tokens. Never commit it to version control.
 
 ---
 
@@ -479,7 +512,7 @@ chmod +x ~/.openclaw/discord-post.py
 
 **Verify it works:**
 ```bash
-python3 ~/.openclaw/discord-post.py Milo "🧪 Test" --channel 1483891285822537740
+python3 ~/.openclaw/discord-post.py Milo "🧪 Test" --channel CHANNEL_ID_COMMAND_CENTER
 ```
 
 If you get `403 Forbidden` — the bot lacks **Send Messages** permission in that channel. Go to the channel → **Edit Channel** → **Permissions** → grant the bot role `Send Messages`.
@@ -510,20 +543,20 @@ The delegation system runs on a strict command-and-report loop:
 
 ### How Each Agent Posts
 
-#### Milo — `#🎯-command-center` (`1483891285822537740`)
+#### Milo — `#🎯-command-center`
 
 ```bash
 # Before delegating
 python3 ~/.openclaw/discord-post.py Milo "🎯 DELEGATING
 Task: [user request]
 To: [agent name]
-Instructions: [what you told them]" --channel 1483891285822537740
+Instructions: [what you told them]" --channel CHANNEL_ID_COMMAND_CENTER
 
 # After task completes
 python3 ~/.openclaw/discord-post.py Milo "🎯 COMPLETE
 Task: [original task]
 Agent: [who did it]
-Result: [outcome]" --channel 1483891285822537740
+Result: [outcome]" --channel CHANNEL_ID_COMMAND_CENTER
 ```
 
 #### Sub-agents — each has 3 channels
@@ -538,17 +571,17 @@ Result: [outcome]" --channel 1483891285822537740
 ```bash
 # Example: Archie handling a research task
 python3 ~/.openclaw/discord-post.py Archie "🔍 START
-Researching: [task]" --channel 1483891301773480017
+Researching: [task]" --channel CHANNEL_ID_ARCHIE_OUTPUT
 
 python3 ~/.openclaw/discord-post.py Archie "📋 LOG
-Steps taken: [what Archie did]" --channel 1483893552877535354
+Steps taken: [what Archie did]" --channel CHANNEL_ID_ARCHIE_LOGS
 
 python3 ~/.openclaw/discord-post.py Archie "🧠 MEMORY
-Task: [task summary] | Result: [outcome]" --channel 1483893553993093231
+Task: [task summary] | Result: [outcome]" --channel CHANNEL_ID_ARCHIE_MEMORY
 
 python3 ~/.openclaw/discord-post.py Archie "✅ COMPLETE
 Task: [original request]
-Result: [findings]" --channel 1483891301773480017
+Result: [findings]" --channel CHANNEL_ID_ARCHIE_OUTPUT
 ```
 
 > **Hard rule:** If it's not in Discord, it didn't happen. Every delegation event must be logged.
@@ -590,7 +623,7 @@ All Discord config lives in `~/.openclaw/agent-bot-tokens.json`:
 
 | Key | Description |
 |---|---|
-| `guild_id` | Server ID: `1483891024974840038` |
+| `guild_id` | Your Discord server ID: `YOUR_SERVER_ID` |
 | `bots.Milo` | Orchestrator bot token |
 | `bots.Archie` | Research agent bot token |
 | `bots.Merc` | Communications agent bot token |
@@ -599,24 +632,24 @@ All Discord config lives in `~/.openclaw/agent-bot-tokens.json`:
 | `bots.Herc` | Wellness agent bot token |
 | `bots.Heph` | Code agent bot token |
 | `bots.Theo` | Review agent bot token |
-| `channels.command-center` | Milo's delegation log: `1483891285822537740` |
-| `channels.archie-output` | Archie's output: `1483891301773480017` |
-| `channels.archie-logs` | Archie's logs: `1483893552877535354` |
-| `channels.archie-memory` | Archie's memory: `1483893553993093231` |
-| `channels.merc-output` | Merc's output: `1483891383700820132` |
-| `channels.merc-logs` | Merc's logs: `1483893677301436507` |
-| `channels.merc-memory` | Merc's memory: `1483893678073188417` |
-| `channels.eris-output` | Eris's output: `1483891385458491402` |
-| `channels.eris-logs` | Eris's logs: `1483893679952232530` |
-| `channels.eris-memory` | Eris's memory: `1483893681193746616` |
-| `channels.atro-output` | Atro's output: `1483891386783629322` |
-| `channels.atro-logs` | Atro's logs: `1483893682514956460` |
-| `channels.atro-memory` | Atro's memory: `1483893683605475348` |
-| `channels.herc-output` | Herc's output: `1483891388184526919` |
-| `channels.herc-logs` | Herc's logs: `1483893684595458200` |
-| `channels.herc-memory` | Herc's memory: `1483893685539176651` |
-| `channels.heph-output` | Heph's output: `1483944411795816641` |
-| `channels.theo-output` | Theo's output: `1483944415985930300` |
+| `channels.command-center` | Milo's delegation log: `CHANNEL_ID_COMMAND_CENTER` |
+| `channels.archie-output` | Archie's output: `CHANNEL_ID_ARCHIE_OUTPUT` |
+| `channels.archie-logs` | Archie's logs: `CHANNEL_ID_ARCHIE_LOGS` |
+| `channels.archie-memory` | Archie's memory: `CHANNEL_ID_ARCHIE_MEMORY` |
+| `channels.merc-output` | Merc's output: `CHANNEL_ID_MERC_OUTPUT` |
+| `channels.merc-logs` | Merc's logs: `CHANNEL_ID_MERC_LOGS` |
+| `channels.merc-memory` | Merc's memory: `CHANNEL_ID_MERC_MEMORY` |
+| `channels.eris-output` | Eris's output: `CHANNEL_ID_ERIS_OUTPUT` |
+| `channels.eris-logs` | Eris's logs: `CHANNEL_ID_ERIS_LOGS` |
+| `channels.eris-memory` | Eris's memory: `CHANNEL_ID_ERIS_MEMORY` |
+| `channels.atro-output` | Atro's output: `CHANNEL_ID_ATRO_OUTPUT` |
+| `channels.atro-logs` | Atro's logs: `CHANNEL_ID_ATRO_LOGS` |
+| `channels.atro-memory` | Atro's memory: `CHANNEL_ID_ATRO_MEMORY` |
+| `channels.herc-output` | Herc's output: `CHANNEL_ID_HERC_OUTPUT` |
+| `channels.herc-logs` | Herc's logs: `CHANNEL_ID_HERC_LOGS` |
+| `channels.herc-memory` | Herc's memory: `CHANNEL_ID_HERC_MEMORY` |
+| `channels.heph-output` | Heph's output: `CHANNEL_ID_HEPH_OUTPUT` |
+| `channels.theo-output` | Theo's output: `CHANNEL_ID_THEO_OUTPUT` |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -703,12 +736,12 @@ Edit `SPEC.md` or the agent keyword tables to customize classification:
 
 ### Command Center
 
-All delegation events post to Discord `#🎯-command-center` (`1483891285822537740`).
+All delegation events post to Discord `#🎯-command-center`.
 
 Full setup instructions are in [Discord Setup](#discord-setup). Quick reference:
 
 ```bash
-python3 ~/.openclaw/discord-post.py Milo "YOUR_MESSAGE" --channel 1483891285822537740
+python3 ~/.openclaw/discord-post.py Milo "YOUR_MESSAGE" --channel CHANNEL_ID_COMMAND_CENTER
 ```
 
 Post types:
