@@ -291,12 +291,25 @@ Quality assurance and code review.
 
 ## Discord Setup
 
-This system uses Discord as its **command center** — every agent posts delegation events, task completions, and errors to dedicated Discord channels. Before the system runs, you need to set up Discord applications for each agent, configure their bots, and invite them to your server.
+This system uses Discord as its **command center** — every agent posts delegation events, task completions, and errors to dedicated Discord channels. Before the system runs, you need a Discord server, a bot application, and all agents configured with their channel IDs.
+
+---
+
+### Server
+
+| Property | Value |
+|---|---|
+| **Server Name** | Milo's Enterprise |
+| **Server ID** | `1483891024974840038` |
+| **Bot App ID** | `1483871309677985953` |
+
+---
 
 ### Prerequisites
 
-- A Discord server (guild) where you have **Administrator** permissions
-- Discord account with ability to create applications at [discord.com/developers](https://discord.com/developers)
+- A Discord server where you have **Administrator** permissions
+- Developer Mode enabled (`User Settings` → `Advanced` → `Developer Mode`) to copy channel IDs
+- Account at [discord.com/developers](https://discord.com/developers) to create bot applications
 
 ---
 
@@ -304,68 +317,50 @@ This system uses Discord as its **command center** — every agent posts delegat
 
 Each agent needs its own Discord application and bot token. Create one application per agent: **Milo, Archie, Merc, Eris, Atro, Herc, Heph, Theo**.
 
-1. Go to [discord.com/developers](https://discord.com/developers) and sign in
-2. Click **Applications** → **New Application**
-3. Give it a name (e.g., `Milo Bot`) → click **Create**
-4. On the left sidebar, click **OAuth2** → **URL Generator**
+1. Go to [discord.com/developers](https://discord.com/developers) → **Applications** → **New Application**
+2. Give it a name (e.g., `Milo`) → click **Create**
+3. On the left sidebar, click **Bot** → copy the **Token** (click **Reset Token** if none exists — Discord only shows it once)
+4. Click **OAuth2** → **URL Generator**
 5. Under **Scopes**, check: `bot`
-6. Under **Bot Permissions**, check the following:
-   - **General Permissions:** `Send Messages`, `Read Message History`
-   - **Text Permissions:** `Send Messages`, `Read Message History`, `Embed Links`
-7. Scroll to the bottom — copy the generated **OAuth2 URL**
-8. Open that URL in your browser and follow the prompts to add the bot to your Discord server
+6. Under **Bot Permissions**, check: `Send Messages`, `Read Message History`, `Embed Links`
+7. Copy the generated **OAuth2 URL** and open it in your browser to add the bot to your server
 
-**Repeat for each agent.** Keep each bot's **Token** (from the **Bot** page) — you'll need them all in the next step.
-
-> 💡 **Tip:** Keep browser tabs open for each agent as you set up — you'll reference them when configuring channel permissions.
+**Repeat for all 8 agents.** Store each token securely — you'll need them all for the config file.
 
 ---
 
-### Step 2 — Collect Bot Tokens
+### Step 2 — Set Up Channels
 
-From each bot's application page:
+Each agent has three dedicated channels:
 
-1. Click **Bot** in the left sidebar
-2. Click **Reset Token** (if no token exists yet) → **Yes, do it**
-3. Copy and **store the token securely** — Discord only shows it once
+| Agent | Output Channel ID | Logs Channel ID | Memory Channel ID |
+|---|---|---|---|
+| **Command Center** (Milo) | `1483891285822537740` | — | — |
+| **Archimedes** (archie) | `1483891301773480017` | `1483893552877535354` | `1483893553993093231` |
+| **Mercury** (merc) | `1483891383700820132` | `1483893677301436507` | `1483893678073188417` |
+| **Eris** | `1483891385458491402` | `1483893679952232530` | `1483893681193746616` |
+| **Atropos** (atro) | `1483891386783629322` | `1483893682514956460` | `1483893683605475348` |
+| **Heracles** (herc) | `1483891388184526919` | `1483893684595458200` | `1483893685539176651` |
+| **Hephaestus** (heph) | `1483944411795816641` | — | — |
+| **Themis** (theo) | `1483944415985930300` | — | — |
 
-You'll compile all 8 tokens into a JSON config file in Step 4.
+> Enable Developer Mode in Discord to right-click channels and **Copy Channel ID**.
 
----
-
-### Step 3 — Set Up Your Discord Server
-
-Create the following channels on your server. Each agent posts to its own dedicated output channel so you can monitor activity in real time.
-
-**Recommended channel structure:**
-
-| Channel Name | Channel ID Config Key | Purpose |
-|---|---|---|
-| `🎯-command-center` | `command-center` | Milo's delegation logs and orchestration events |
-| `📡-research-output` | `research-output` | Archie research results |
-| `📣-comms-output` | `comms-output` | Merc communications output |
-| `🛒-procurement-output` | `procurement-output` | Eris ordering/procurement results |
-| `⏰-temporal-output` | `temporal-output` | Atro calendar/reminders output |
-| `💪-wellness-output` | `wellness-output` | Herc health/nutrition output |
-| `💻-code-output` | `code-output` | Heph code generation output |
-| `🔍-review-output` | `review-output` | Theo code review output |
-| `🫡-round-table` | `round-table` | General agent discussion / all-hands channel |
-| `☕-break-room` | `break-room` | Casual agent check-ins and banter |
-
-**To get a channel ID:**
-1. Enable Developer Mode in Discord (`User Settings` → `Advanced` → `Developer Mode`)
-2. Right-click the channel name → **Copy Channel ID**
+**Channel purpose:**
+- **Output** — the agent's primary results and responses
+- **Logs** — detailed execution logs for debugging
+- **Memory** — stores completed task context to prevent duplicate work
 
 ---
 
-### Step 4 — Configure the Token and Channel File
+### Step 3 — Configure the Token and Channel File
 
-Create a file at `~/.openclaw/agent-bot-tokens.json` with the following structure:
+Create `~/.openclaw/agent-bot-tokens.json`:
 
 ```json
 {
-  "guild_id": "YOUR_GUILD_ID",
-  "round_table_channel": "YOUR_ROUND_TABLE_CHANNEL_ID",
+  "guild_id": "1483891024974840038",
+  "round_table_channel": "1483982757523750942",
   "bots": {
     "Milo":    "YOUR_MILO_BOT_TOKEN",
     "Archie":  "YOUR_ARCHIE_BOT_TOKEN",
@@ -377,28 +372,35 @@ Create a file at `~/.openclaw/agent-bot-tokens.json` with the following structur
     "Theo":    "YOUR_THEO_BOT_TOKEN"
   },
   "channels": {
-    "command-center":   "CHANNEL_ID",
-    "research-output":  "CHANNEL_ID",
-    "comms-output":     "CHANNEL_ID",
-    "procurement-output": "CHANNEL_ID",
-    "temporal-output":  "CHANNEL_ID",
-    "wellness-output":  "CHANNEL_ID",
-    "code-output":      "CHANNEL_ID",
-    "review-output":    "CHANNEL_ID",
-    "round-table":       "CHANNEL_ID",
-    "break-room":        "CHANNEL_ID"
+    "command-center":        "1483891285822537740",
+    "archie-output":          "1483891301773480017",
+    "archie-logs":           "1483893552877535354",
+    "archie-memory":         "1483893553993093231",
+    "merc-output":           "1483891383700820132",
+    "merc-logs":             "1483893677301436507",
+    "merc-memory":           "1483893678073188417",
+    "eris-output":           "1483891385458491402",
+    "eris-logs":             "1483893679952232530",
+    "eris-memory":          "1483893681193746616",
+    "atro-output":           "1483891386783629322",
+    "atro-logs":             "1483893682514956460",
+    "atro-memory":          "1483893683605475348",
+    "herc-output":           "1483891388184526919",
+    "herc-logs":             "1483893684595458200",
+    "herc-memory":          "1483893685539176651",
+    "heph-output":           "1483944411795816641",
+    "theo-output":           "1483944415985930300",
+    "round-table":           "1483982757523750942",
+    "break-room":            "1485043346132045824"
   }
 }
 ```
 
-**To get your `guild_id`:**
-- With Developer Mode enabled, right-click your server name → **Copy Server ID**
-
 ---
 
-### Step 5 — Install the Discord Poster Script
+### Step 4 — Install the Discord Poster Script
 
-The `discord-post.py` script handles posting as any agent to any channel. It reads tokens from `~/.openclaw/agent-bot-tokens.json` so agents never need to store tokens individually.
+The `discord-post.py` script posts as any agent to any channel, reading tokens from the config above.
 
 **Location:** `~/.openclaw/discord-post.py`
 
@@ -406,10 +408,11 @@ The `discord-post.py` script handles posting as any agent to any channel. It rea
 #!/usr/bin/env python3
 """
 Agent Discord poster — posts as individual agent bots.
-Usage: python3 ~/.openclaw/discord-post.py <agent_name> <message>
-       python3 ~/.openclaw/discord-post.py <agent_name> <message> --reply-to <message_id>
-       python3 ~/.openclaw/discord-post.py <agent_name> <message> --channel <channel_id>
-       python3 ~/.openclaw/discord-post.py <agent_name> <message> --react-to <message_id>
+Usage:
+  python3 ~/.openclaw/discord-post.py <agent_name> <message>
+  python3 ~/.openclaw/discord-post.py <agent_name> <message> --channel <channel_id>
+  python3 ~/.openclaw/discord-post.py <agent_name> <message> --reply-to <message_id>
+  python3 ~/.openclaw/discord-post.py <agent_name> <message> --react-to <message_id>
 """
 import sys, json, http.client
 
@@ -418,15 +421,13 @@ config = json.load(open('/Users/justinedelano/.openclaw/agent-bot-tokens.json'))
 agent = sys.argv[1]
 message = sys.argv[2]
 reply_to = None
-channel_id = config['round_table_channel']  # default to round table
+channel_id = config['round_table_channel']  # defaults to round-table
 
 if '--reply-to' in sys.argv:
-    idx = sys.argv.index('--reply-to')
-    reply_to = sys.argv[idx + 1]
+    reply_to = sys.argv[sys.argv.index('--reply-to') + 1]
 
 if '--channel' in sys.argv:
-    idx = sys.argv.index('--channel')
-    channel_id = sys.argv[idx + 1]
+    channel_id = sys.argv[sys.argv.index('--channel') + 1]
 
 token = config['bots'].get(agent)
 if not token:
@@ -455,113 +456,114 @@ if resp.status == 200:
 else:
     print(f"Failed: {resp.status} {data}")
 
-# Handle reactions
 if '--react-to' in sys.argv:
-    idx = sys.argv.index('--react-to')
-    react_to_msg_id = sys.argv[idx + 1]
-    emoji = "%E2%9C%85"  # white checkmark ✅
+    msg_id = sys.argv[sys.argv.index('--react-to') + 1]
+    encoded_emoji = "%E2%9C%85"  # ✅
     conn.request(
         "PUT",
-        f"/api/v10/channels/{channel_id}/messages/{react_to_msg_id}/reactions/{emoji}/@me",
+        f"/api/v10/channels/{channel_id}/messages/{msg_id}/reactions/{encoded_emoji}/@me",
         body=None,
         headers={
             "Authorization": f"Bot {token}",
             "User-Agent": "DiscordBot (https://openclaw.ai, 1.0)"
         }
     )
-    react_resp = conn.getresponse()
-    if react_resp.status == 204:
-        print(f"Reacted with ✅ to message {react_to_msg_id}")
-    else:
-        print(f"React failed: {react_resp.status}")
+    if conn.getresponse().status == 204:
+        print(f"Reacted with ✅ to message {msg_id}")
 ```
 
 **Make it executable:**
 ```bash
-mkdir -p ~/.openclaw
-curl -o ~/.openclaw/discord-post.py https://your-hosted-script-url/discord-post.py
-# OR copy the script contents manually
 chmod +x ~/.openclaw/discord-post.py
 ```
 
----
-
-### Step 6 — Verify Bot Permissions
-
-After adding each bot to your server, test that it can post:
-
+**Verify it works:**
 ```bash
-# Test posting as Milo to the command center
-python3 ~/.openclaw/discord-post.py Milo "🧪 Test message from Milo" --channel 1483891285822537740
-
-# Test posting as Archie to research output
-python3 ~/.openclaw/discord-post.py Archie "🧪 Archie online" --channel 1483891301773480017
+python3 ~/.openclaw/discord-post.py Milo "🧪 Test" --channel 1483891285822537740
 ```
 
-If you get a `403 Forbidden` response:
-- The bot is missing **Send Messages** permission in that channel
-- Go to the channel → **Edit Channel** → **Permissions** → **@everyone** → ensure `Send Messages` is allowed
-- Or grant the bot role explicit permissions in the channel
+If you get `403 Forbidden` — the bot lacks **Send Messages** permission in that channel. Go to the channel → **Edit Channel** → **Permissions** → grant the bot role `Send Messages`.
 
 ---
 
-### How Agent Posting Works
+### Workflow
 
-Every agent follows a strict logging protocol. If it's not in Discord, it didn't happen.
+The delegation system runs on a strict command-and-report loop:
 
-#### Milo (Orchestrator) — posts to `#🎯-command-center`
+```
+1. User posts in #command-center
+        │
+        ▼
+2. Milo analyzes intent → routes to specialist agent
+        │
+        ▼
+3. Agent posts to its OUTPUT channel (what it did)
+        │
+        ▼
+4. Agent updates MEMORY channel (prevents duplicate work)
+        │
+        ▼
+5. Milo posts completion summary back to #command-center
+```
+
+---
+
+### How Each Agent Posts
+
+#### Milo — `#🎯-command-center` (`1483891285822537740`)
 
 ```bash
-# Before delegating a task
+# Before delegating
 python3 ~/.openclaw/discord-post.py Milo "🎯 DELEGATING
-Task: [what the user asked for]
+Task: [user request]
 To: [agent name]
 Instructions: [what you told them]" --channel 1483891285822537740
 
-# After task is complete
+# After task completes
 python3 ~/.openclaw/discord-post.py Milo "🎯 COMPLETE
 Task: [original task]
 Agent: [who did it]
 Result: [outcome]" --channel 1483891285822537740
 ```
 
-#### Sub-agents — post to their own output channel
+#### Sub-agents — each has 3 channels
 
-Every specialist agent posts three types of messages to its dedicated channel:
-
-| Post Type | When | Content |
+| Post | Where | When |
 |---|---|---|
-| **START** | Before starting work | What the agent is about to do |
-| **COMPLETE** | After finishing | What was done and the result |
-| **ERROR** | If something fails | What went wrong, what was tried |
+| **START** | Output channel | Before starting work |
+| **Progress / Logs** | Logs channel | During execution |
+| **Memory update** | Memory channel | After completion (prevents duplicate work) |
+| **COMPLETE** | Output channel | Final result |
 
 ```bash
-# Archie starts a research task
+# Example: Archie handling a research task
 python3 ~/.openclaw/discord-post.py Archie "🔍 START
-Researching: [task summary]" --channel 1483891301773480017
+Researching: [task]" --channel 1483891301773480017
 
-# Archie completes the task
+python3 ~/.openclaw/discord-post.py Archie "📋 LOG
+Steps taken: [what Archie did]" --channel 1483893552877535354
+
+python3 ~/.openclaw/discord-post.py Archie "🧠 MEMORY
+Task: [task summary] | Result: [outcome]" --channel 1483893553993093231
+
 python3 ~/.openclaw/discord-post.py Archie "✅ COMPLETE
 Task: [original request]
 Result: [findings]" --channel 1483891301773480017
 ```
 
+> **Hard rule:** If it's not in Discord, it didn't happen. Every delegation event must be logged.
+
 ---
 
 ### Inter-Agent Communication
 
-Agents communicate through two channels:
+| Layer | Tool | What it handles |
+|---|---|---|
+| **Human-visible coordination** | Discord channels | Activity logs, completion reports, error visibility |
+| **Internal task routing** | Mesh relay (`http://192.168.0.247:8500/messages/send`) | Task delegation from Milo → specialist agents |
 
-#### 1. Discord — Human-visible coordination
-All agents post their activity to Discord so humans can observe the system in real time. This is the "public record" of what the system is doing.
-
-#### 2. Mesh Relay — Internal agent-to-agent messaging
-For task delegation between agents, internal requests go through the mesh relay:
-
-```
-POST http://192.168.0.247:8500/messages/send
-Content-Type: application/json
-
+**Mesh relay message envelope:**
+```json
 {
   "message_id": "uuid-v4",
   "timestamp": "ISO-8601",
@@ -578,46 +580,43 @@ Content-Type: application/json
 }
 ```
 
-The mesh relay handles:
-- Task routing from Milo to specialist agents
-- Response callbacks
-- Delivery receipts (at-least-once, 3 retries with exponential backoff)
-
-Discord handles:
-- Human-facing activity logs
-- Completion reports
-- Error visibility
-- Coordination messages (what each agent is currently doing)
+Delivery: at-least-once, 3 retries with exponential backoff, 30s timeout.
 
 ---
 
 ### Configuration Reference
 
-All Discord configuration lives in `~/.openclaw/agent-bot-tokens.json`:
+All Discord config lives in `~/.openclaw/agent-bot-tokens.json`:
 
 | Key | Description |
 |---|---|
-| `guild_id` | Your Discord server's ID |
-| `round_table_channel` | Default channel for general agent discussion |
-| `bots` | Map of agent name → bot token |
-| `bots.Milo` | Milo's bot token (orchestrator) |
-| `bots.Archie` | Archie's bot token (research) |
-| `bots.Merc` | Merc's bot token (communications) |
-| `bots.Eris` | Eris's bot token (procurement) |
-| `bots.Atro` | Atro's bot token (calendar) |
-| `bots.Herc` | Herc's bot token (wellness) |
-| `bots.Heph` | Heph's bot token (code generation) |
-| `bots.Theo` | Theo's bot token (code review) |
-| `channels.command-center` | Milo's delegation log channel ID |
-| `channels.research-output` | Archie's output channel ID |
-| `channels.comms-output` | Merc's output channel ID |
-| `channels.procurement-output` | Eris's output channel ID |
-| `channels.temporal-output` | Atro's output channel ID |
-| `channels.wellness-output` | Herc's output channel ID |
-| `channels.code-output` | Heph's output channel ID |
-| `channels.review-output` | Theo's output channel ID |
-| `channels.round-table` | General discussion channel ID |
-| `channels.break-room` | Casual/banter channel ID |
+| `guild_id` | Server ID: `1483891024974840038` |
+| `bots.Milo` | Orchestrator bot token |
+| `bots.Archie` | Research agent bot token |
+| `bots.Merc` | Communications agent bot token |
+| `bots.Eris` | Procurement agent bot token |
+| `bots.Atro` | Calendar agent bot token |
+| `bots.Herc` | Wellness agent bot token |
+| `bots.Heph` | Code agent bot token |
+| `bots.Theo` | Review agent bot token |
+| `channels.command-center` | Milo's delegation log: `1483891285822537740` |
+| `channels.archie-output` | Archie's output: `1483891301773480017` |
+| `channels.archie-logs` | Archie's logs: `1483893552877535354` |
+| `channels.archie-memory` | Archie's memory: `1483893553993093231` |
+| `channels.merc-output` | Merc's output: `1483891383700820132` |
+| `channels.merc-logs` | Merc's logs: `1483893677301436507` |
+| `channels.merc-memory` | Merc's memory: `1483893678073188417` |
+| `channels.eris-output` | Eris's output: `1483891385458491402` |
+| `channels.eris-logs` | Eris's logs: `1483893679952232530` |
+| `channels.eris-memory` | Eris's memory: `1483893681193746616` |
+| `channels.atro-output` | Atro's output: `1483891386783629322` |
+| `channels.atro-logs` | Atro's logs: `1483893682514956460` |
+| `channels.atro-memory` | Atro's memory: `1483893683605475348` |
+| `channels.herc-output` | Herc's output: `1483891388184526919` |
+| `channels.herc-logs` | Herc's logs: `1483893684595458200` |
+| `channels.herc-memory` | Herc's memory: `1483893685539176651` |
+| `channels.heph-output` | Heph's output: `1483944411795816641` |
+| `channels.theo-output` | Theo's output: `1483944415985930300` |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -704,9 +703,9 @@ Edit `SPEC.md` or the agent keyword tables to customize classification:
 
 ### Command Center
 
-All delegation events post to Discord `#🎯-command-center` (channel ID: `1483891285822537740`).
+All delegation events post to Discord `#🎯-command-center` (`1483891285822537740`).
 
-Full Discord setup instructions are in the [Discord Setup](#discord-setup) section. Quick reference:
+Full setup instructions are in [Discord Setup](#discord-setup). Quick reference:
 
 ```bash
 python3 ~/.openclaw/discord-post.py Milo "YOUR_MESSAGE" --channel 1483891285822537740
