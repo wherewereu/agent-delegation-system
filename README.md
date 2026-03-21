@@ -431,11 +431,11 @@ Distributed under the Unlicense. See `LICENSE` for more information.
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
-[contributors-shield]: https://img.shields.io/github/contributors/milo-agent/agent-delegation-system.svg?style=for-the-badge
-[contributors-url]: https://github.com/milo-agent/agent-delegation-system/graphs/contributors
-[stars-shield]: https://img.shields.io/github/stars/milo-agent/agent-delegation-system.svg?style=for-the-badge
-[stars-url]: https://github.com/milo-agent/agent-delegation-system/stargazers
-[issues-shield]: https://img.shields.io/github/issues/milo-agent/agent-delegation-system.svg?style=for-the-badge
-[issues-url]: https://github.com/milo-agent/agent-delegation-system/issues
-[license-shield]: https://img.shields.io/github/license/milo-agent/agent-delegation-system.svg?style=for-the-badge
-[license-url]: https://github.com/milo-agent/agent-delegation-system/blob/master/LICENSE
+[contributors-shield]: https://img.shields.io/github/contributors/wherewereu/agent-delegation-system.svg?style=for-the-badge
+[contributors-url]: https://github.com/wherewereu/agent-delegation-system/graphs/contributors
+[stars-shield]: https://img.shields.io/github/stars/wherewereu/agent-delegation-system.svg?style=for-the-badge
+[stars-url]: https://github.com/wherewereu/agent-delegation-system/stargazers
+[issues-shield]: https://img.shields.io/github/issues/wherewereu/agent-delegation-system.svg?style=for-the-badge
+[issues-url]: https://github.com/wherewereu/agent-delegation-system/issues
+[license-shield]: https://img.shields.io/github/license/wherewereu/agent-delegation-system.svg?style=for-the-badge
+[license-url]: https://github.com/wherewereu/agent-delegation-system/blob/master/LICENSE
