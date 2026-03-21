@@ -345,17 +345,27 @@ This system uses three types of values you'll need to gather from Discord:
 
 ### Step 1 — Create a Discord Application for Each Agent
 
-Each agent needs its own Discord application and bot token. Create one application per agent: **Milo, Archie, Merc, Eris, Atro, Herc, Heph, Theo.**
+> ⚠️ **Important:** Each agent operates as its own independent Discord bot. You must create a **separate Discord application and bot token** for every agent (Milo, Archie, Merc, Eris, Atro, Herc, Heph, Theo). One bot per agent — they do not share tokens or applications.
+
+**Why separate bots?**
+- Each agent authenticates independently when posting to Discord
+- A single bot can only be in one place at a time — one bot means one agent
+- Isolation prevents permission conflicts and makes debugging easier
+- Each agent controls only their own bot's actions
+
+**How to create one:**
 
 1. Go to [discord.com/developers](https://discord.com/developers) → **Applications** → **New Application**
-2. Give it a name (e.g., `Milo`) → click **Create**
-3. On the left sidebar, click **Bot** → copy the **Token** (click **Reset Token** if none exists — Discord only shows it once)
+2. Give it a name matching the agent (e.g., `Milo`) → click **Create**
+3. On the left sidebar, click **Bot** → click **Reset Token** → **copy and save the token immediately** (Discord only shows it once!)
 4. Click **OAuth2** → **URL Generator**
 5. Under **Scopes**, check: `bot`
 6. Under **Bot Permissions**, check: `Send Messages`, `Read Message History`, `Embed Links`
-7. Copy the generated **OAuth2 URL** and open it in your browser to add the bot to your server
+7. Copy the generated **OAuth2 URL** and open it in your browser to add that bot to your server
 
-**Repeat for all 8 agents.** Store each token securely — you'll need them all for the config file.
+**Repeat for all 8 agents.** You will end up with 8 separate bots in your server, one per agent. Store all tokens securely — you'll need them for the config file.
+
+> 💡 **Tip:** Keep your Discord Developer Portal tab open or copy tokens to a password manager as you go — Discord only shows each token once after generation.
 
 ---
 
