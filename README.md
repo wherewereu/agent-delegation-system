@@ -464,7 +464,7 @@ This system uses Discord as its **command center** — every agent posts delegat
 |---|---|
 | **Server Name** | Milo's Enterprise |
 | **Server ID** | `YOUR_SERVER_ID` |
-| **Bot App ID** | `1483871309677985953` |
+| **Bot App ID** | `YOUR_BOT_APP_ID` |
 
 ---
 
@@ -494,18 +494,14 @@ Each spawned agent needs its own Discord application and bot token. Create one a
 
 ### Step 2 — Set Up Channels
 
-Each spawned agent has three dedicated channels:
+The system uses three shared channels plus one output channel per agent:
 
-| Agent | Output Channel ID | Logs Channel ID | Memory Channel ID |
-|---|---|---|---|
-| **Command Center** (Milo) | `YOUR_COMMAND_CENTER_CHANNEL_ID` | — | — |
-| **Archimedes** (archie) | `YOUR_ARCHIE_OUTPUT_CHANNEL_ID` | `YOUR_ARCHIE_LOGS_CHANNEL_ID` | `YOUR_ARCHIE_MEMORY_CHANNEL_ID` |
-| **Mercury** (merc) | `YOUR_MERC_OUTPUT_CHANNEL_ID` | `YOUR_MERC_LOGS_CHANNEL_ID` | `YOUR_MERC_MEMORY_CHANNEL_ID` |
-| **Eris** | `YOUR_ERIS_OUTPUT_CHANNEL_ID` | `YOUR_ERIS_LOGS_CHANNEL_ID` | `YOUR_ERIS_MEMORY_CHANNEL_ID` |
-| **Atropos** (atro) | `YOUR_ATRO_OUTPUT_CHANNEL_ID` | `YOUR_ATRO_LOGS_CHANNEL_ID` | `YOUR_ATRO_MEMORY_CHANNEL_ID` |
-| **Heracles** (herc) | `YOUR_HERC_OUTPUT_CHANNEL_ID` | `YOUR_HERC_LOGS_CHANNEL_ID` | `YOUR_HERC_MEMORY_CHANNEL_ID` |
-| **Hephaestus** (heph) | `1483944411795816641` | — | — |
-| **Themis** (theo) | `1483944415985930300` | — | — |
+| Channel | Purpose |
+|---|---|
+| **Command Center** | Milo's delegation logs and completion reports |
+| **Round-table** | Multi-agent discussion and handoffs |
+| **Break Room** | Agent-to-agent banter and off-topic |
+| **Each agent** | One output channel for agent results |
 
 > Enable Developer Mode in Discord to right-click channels and **Copy Channel ID**.
 
@@ -523,7 +519,7 @@ Create `~/.openclaw/agent-bot-tokens.json`:
 ```json
 {
   "guild_id": "YOUR_SERVER_ID",
-  "round_table_channel": "1483982757523750942",
+  "round_table_channel": "YOUR_ROUND_TABLE_CHANNEL_ID",
   "bots": {
     "Milo":    "YOUR_MILO_BOT_TOKEN",
     "Archie":  "YOUR_ARCHIE_BOT_TOKEN",
@@ -536,25 +532,15 @@ Create `~/.openclaw/agent-bot-tokens.json`:
   },
   "channels": {
     "command-center":        "YOUR_COMMAND_CENTER_CHANNEL_ID",
+    "round-table":           "YOUR_ROUND_TABLE_CHANNEL_ID",
+    "break-room":            "YOUR_BREAK_ROOM_CHANNEL_ID",
     "archie-output":          "YOUR_ARCHIE_OUTPUT_CHANNEL_ID",
-    "archie-logs":           "YOUR_ARCHIE_LOGS_CHANNEL_ID",
-    "archie-memory":         "YOUR_ARCHIE_MEMORY_CHANNEL_ID",
     "merc-output":           "YOUR_MERC_OUTPUT_CHANNEL_ID",
-    "merc-logs":             "YOUR_MERC_LOGS_CHANNEL_ID",
-    "merc-memory":           "YOUR_MERC_MEMORY_CHANNEL_ID",
     "eris-output":           "YOUR_ERIS_OUTPUT_CHANNEL_ID",
-    "eris-logs":             "YOUR_ERIS_LOGS_CHANNEL_ID",
-    "eris-memory":          "YOUR_ERIS_MEMORY_CHANNEL_ID",
     "atro-output":           "YOUR_ATRO_OUTPUT_CHANNEL_ID",
-    "atro-logs":             "YOUR_ATRO_LOGS_CHANNEL_ID",
-    "atro-memory":          "YOUR_ATRO_MEMORY_CHANNEL_ID",
     "herc-output":           "YOUR_HERC_OUTPUT_CHANNEL_ID",
-    "herc-logs":             "YOUR_HERC_LOGS_CHANNEL_ID",
-    "herc-memory":          "YOUR_HERC_MEMORY_CHANNEL_ID",
-    "heph-output":           "1483944411795816641",
-    "theo-output":           "1483944415985930300",
-    "round-table":           "1483982757523750942",
-    "break-room":            "1485043346132045824"
+    "heph-output":           "YOUR_HEPH_OUTPUT_CHANNEL_ID",
+    "theo-output":           "YOUR_THEO_OUTPUT_CHANNEL_ID"
   }
 }
 ```
@@ -584,7 +570,7 @@ config = json.load(open('/Users/justinedelano/.openclaw/agent-bot-tokens.json'))
 agent = sys.argv[1]
 message = sys.argv[2]
 reply_to = None
-channel_id = config['round_table_channel']  # defaults to round-table
+channel_id = config['channels'].get('round-table', '')  # defaults to round-table
 
 if '--reply-to' in sys.argv:
     reply_to = sys.argv[sys.argv.index('--reply-to') + 1]
@@ -689,25 +675,17 @@ Agent: [who did it]
 Result: [outcome]" --channel YOUR_COMMAND_CENTER_CHANNEL_ID
 ```
 
-#### Spawned Sub-agents — each has 3 channels
+#### Spawned Sub-agents — one output channel each
 
-| Post | Where | When |
-|---|---|---|
-| **START** | Output channel | Before starting work |
-| **Progress / Logs** | Logs channel | During execution |
-| **Memory update** | Memory channel | After completion (prevents duplicate work) |
-| **COMPLETE** | Output channel | Final result |
+| Post | When |
+|---|---|
+| **START** | Before starting work |
+| **COMPLETE** | After task finishes |
 
 ```bash
 # Example: Archie (spawned subagent) handling a research task
 python3 ~/.openclaw/discord-post.py Archie "🔍 START
 Researching: [task]" --channel YOUR_ARCHIE_OUTPUT_CHANNEL_ID
-
-python3 ~/.openclaw/discord-post.py Archie "📋 LOG
-Steps taken: [what Archie did]" --channel YOUR_ARCHIE_LOGS_CHANNEL_ID
-
-python3 ~/.openclaw/discord-post.py Archie "🧠 MEMORY
-Task: [task summary] | Result: [outcome]" --channel YOUR_ARCHIE_MEMORY_CHANNEL_ID
 
 python3 ~/.openclaw/discord-post.py Archie "✅ COMPLETE
 Task: [original request]
@@ -763,23 +741,15 @@ All Discord config lives in `~/.openclaw/agent-bot-tokens.json`:
 | `bots.Heph` | Code spawned agent bot token |
 | `bots.Theo` | Review spawned agent bot token |
 | `channels.command-center` | Milo's delegation log: `YOUR_COMMAND_CENTER_CHANNEL_ID` |
+| `channels.round-table` | Round-table channel: `YOUR_ROUND_TABLE_CHANNEL_ID` |
+| `channels.break-room` | Break Room channel: `YOUR_BREAK_ROOM_CHANNEL_ID` |
 | `channels.archie-output` | Archie's output: `YOUR_ARCHIE_OUTPUT_CHANNEL_ID` |
-| `channels.archie-logs` | Archie's logs: `YOUR_ARCHIE_LOGS_CHANNEL_ID` |
-| `channels.archie-memory` | Archie's memory: `YOUR_ARCHIE_MEMORY_CHANNEL_ID` |
 | `channels.merc-output` | Merc's output: `YOUR_MERC_OUTPUT_CHANNEL_ID` |
-| `channels.merc-logs` | Merc's logs: `YOUR_MERC_LOGS_CHANNEL_ID` |
-| `channels.merc-memory` | Merc's memory: `YOUR_MERC_MEMORY_CHANNEL_ID` |
 | `channels.eris-output` | Eris's output: `YOUR_ERIS_OUTPUT_CHANNEL_ID` |
-| `channels.eris-logs` | Eris's logs: `YOUR_ERIS_LOGS_CHANNEL_ID` |
-| `channels.eris-memory` | Eris's memory: `YOUR_ERIS_MEMORY_CHANNEL_ID` |
 | `channels.atro-output` | Atro's output: `YOUR_ATRO_OUTPUT_CHANNEL_ID` |
-| `channels.atro-logs` | Atro's logs: `YOUR_ATRO_LOGS_CHANNEL_ID` |
-| `channels.atro-memory` | Atro's memory: `YOUR_ATRO_MEMORY_CHANNEL_ID` |
 | `channels.herc-output` | Herc's output: `YOUR_HERC_OUTPUT_CHANNEL_ID` |
-| `channels.herc-logs` | Herc's logs: `YOUR_HERC_LOGS_CHANNEL_ID` |
-| `channels.herc-memory` | Herc's memory: `YOUR_HERC_MEMORY_CHANNEL_ID` |
-| `channels.heph-output` | Heph's output: `1483944411795816641` |
-| `channels.theo-output` | Theo's output: `1483944415985930300` |
+| `channels.heph-output` | Heph's output: `YOUR_HEPH_OUTPUT_CHANNEL_ID` |
+| `channels.theo-output` | Theo's output: `YOUR_THEO_OUTPUT_CHANNEL_ID` |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
