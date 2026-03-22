@@ -456,6 +456,8 @@ Quality assurance and code review.
 
 This system uses Discord as its **command center** — every agent posts delegation events, task completions, and errors to dedicated Discord channels. Before the system runs, you need a Discord server, a bot application, and all agents configured with their channel IDs.
 
+> ⚠️ **CRITICAL:** When running subagents in isolated cron jobs, always use a Discord posting script directly in the task payload. Do NOT rely on OpenClaw's delivery config for Discord — it doesn't work reliably from isolated sessions. Include the full `discord-post.py` command in each agent's task instructions.
+
 ---
 
 ### Server

@@ -1,5 +1,18 @@
 # Agent Delegation Skill
 
+## ⚠️ Discord Setup (CRITICAL)
+When running subagents in isolated cron jobs that need to post to Discord, use `discord-post.py` directly in your task — do NOT rely on delivery config.
+
+Example:
+```bash
+python3 /path/to/discord-post.py AGENT_NAME "Your message here" --channel CHANNEL_ID
+```
+
+**Key points:**
+- Delivery config doesn't work reliably from isolated sessions
+- Always use the script directly for Discord posts
+- Each agent needs their own Discord bot token
+
 ## Metadata
 
 | Field | Value |
