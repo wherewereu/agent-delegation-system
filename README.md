@@ -13,37 +13,208 @@
   <h1>🤖 Agent Delegation System</h1>
   <p><strong>Multi-agent task routing and orchestration for OpenClaw</strong></p>
   <p>
-    <a href="#overview">Overview</a>
+    <a href="#what-are-openclaw-subagents">What are Subagents?</a>
+    ·
+    <a href="#setting-up-subagents">Set Up Subagents</a>
     ·
     <a href="#architecture">Architecture</a>
-    ·
-    <a href="#getting-started">Getting Started</a>
     ·
     <a href="#discord-setup">Discord Setup</a>
     ·
     <a href="#agents">Agents</a>
-    ·
-    <a href="#configuration">Configuration</a>
   </p>
 </div>
 
 ---
 
-## Overview
+## What are OpenClaw Subagents?
 
-The **Agent Delegation System** is an OpenClaw skill that enables an orchestrator agent (Milo) to automatically analyze incoming user requests and route them to the appropriate specialist agent — without manual intervention.
+> **These are OpenClaw subagents (also called spawned agents).** They are not separate processes or independent programs — they are *sessions spawned by the main orchestrator agent* to handle specialized tasks.
 
-**What it does:**
-- Classifies user intent from natural language
-- Routes tasks to the right specialist agent
-- Monitors task execution and handles failures
-- Reports results back to the user
-- Integrates with Discord command center for team visibility
+In OpenClaw, a **subagent** (or *spawned agent*) is a dedicated agent session that the main orchestrator (Milo) spawns on demand to handle a specific task domain. Think of it like a manager delegating work to specialists — Milo stays in charge, but offloads research, email, coding, and other specialized work to agents who are experts in those areas.
 
-**Who it's for:**
-- Anyone running a multi-agent OpenClaw setup
-- Power users who want automated, intelligent task routing
-- Teams that need coordinated agent workflows
+### Key concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Main agent** | Your primary OpenClaw agent (e.g., Milo). All user requests come here first. |
+| **Spawned agent** | A subagent session created by the main agent to handle a specific task. |
+| **sessions_yield** | The OpenClaw tool the main agent uses to spawn a subagent and hand off a task. |
+| **Skill** | Each agent has a `SKILL.md` that defines its role, behavior, and rules. |
+| **Workspace isolation** | Each agent has its own workspace (`SOUL.md`, `memory/`, skills) — separate from the main agent. |
+
+### How spawning works
+
+When Milo (the orchestrator) receives a request, it:
+
+1. **Classifies the intent** — is this research? email? a doctor visit reminder?
+2. **Checks availability** — is the right agent free?
+3. **Spawns a subagent** using `sessions_yield` — the subagent wakes up with its own skill file loaded and a specific task to complete.
+4. **Monitors and receives results** — the subagent completes its work and results flow back to Milo.
+5. **Reports to the user** — Milo delivers the final answer.
+
+### Why use subagents?
+
+- **Focus** — Each agent only knows its domain. No prompt pollution from irrelevant keywords.
+- **Parallelism** — Multiple subagents can work simultaneously on independent tasks.
+- **Specialization** — Archie is great at research. Heph is great at code. You don't ask the wrong agent.
+- **Debugging** — Tasks are isolated. If something breaks, you know exactly which agent to inspect.
+
+---
+
+## Setting Up OpenClaw Subagents
+
+This section walks you through setting up your own multi-agent team using **only OpenClaw** — no custom infrastructure required.
+
+### Prerequisites
+
+| Dependency | Version | Purpose |
+|-----------|---------|---------|
+| [OpenClaw](https://openclaw.ai) | Latest | Agent orchestration framework |
+| Node.js | 18+ | Runtime |
+| Git | 2.30+ | Version control |
+| A Discord server | — | Command center (optional but recommended) |
+
+### Step 1 — Install OpenClaw
+
+```bash
+npm install -g openclaw@latest
+openclaw setup
+```
+
+### Step 2 — Understand how subagents are spawned
+
+OpenClaw subagents are **spawned sessions** — they are not separate processes you run independently. The main agent uses the `sessions_yield` tool to spin up a subagent session for a specific task.
+
+The spawn is defined by:
+- **A skill file** (`SKILL.md`) — the agent's brain, defining its role, rules, and behavior
+- **A task prompt** — what the subagent should do in this specific session
+- **A workspace** — the subagent's own file system space for memory, notes, and working files
+
+Each subagent is a **lightweight session** that loads its skill, does its work, and returns results. You don't run them as persistent background services — the main agent spawns them as needed.
+
+### Step 3 — Create your agent skill files
+
+Each specialist agent needs a `SKILL.md` file that defines who it is and what it does. Create a directory for each agent under your workspace:
+
+```bash
+mkdir -p ~/.openclaw/workspace/skills/archie
+mkdir -p ~/.openclaw/workspace/skills/merc
+mkdir -p ~/.openclaw/workspace/skills/eris
+# ... etc
+```
+
+#### Example: Archie's SKILL.md
+
+```markdown
+---
+name: archie
+description: Research specialist agent. Handles web searches, fact-finding, and information retrieval.
+---
+
+# Archimedes (Archie)
+
+## Role
+Research and information retrieval. You are spawned by the main orchestrator agent to handle research tasks.
+
+## What You Do
+- Search the web for relevant information
+- Verify facts across multiple sources
+- Deliver structured findings to the orchestrator
+
+## Output Format
+Return a structured brief:
+- Topic: [what you researched]
+- Summary: [2-3 sentence summary]
+- Key Findings: [bullet points]
+- Sources: [links]
+
+## Rules
+- Always cite your sources
+- Lead with the most important finding
+- Never extrapolate beyond what sources say
+```
+
+### Step 4 — Spawn subagents using sessions_yield
+
+From within the main agent (Milo), the orchestrator spawns a subagent like this:
+
+```
+The main agent calls sessions_yield with:
+- skill: "archie"              # the skill name
+- prompt: "Research the latest AI news for Justine's Amazon SME role"
+- label: "research-ai-news"    # session label for tracking
+```
+
+The `sessions_yield` tool:
+1. Creates a new session for the subagent
+2. Loads the agent's `SKILL.md` (its brain)
+3. Injects the task prompt
+4. Runs the subagent to completion
+5. Returns results to the main agent
+
+### Step 5 — Create agent workspaces (optional but recommended)
+
+For more persistent agents with their own memory and long-term context, create dedicated workspaces:
+
+```bash
+# Create a workspace for Archie
+openclaw agents add archie --workspace ~/.openclaw/workspace/archie
+
+# Create a workspace for Merc
+openclaw agents add merc --workspace ~/.openclaw/workspace/merc
+```
+
+This gives each agent:
+- Its own `SOUL.md`, `AGENTS.md`, `USER.md`
+- Its own session store
+- Its own memory files
+
+### Step 6 — Connect Discord for team visibility (recommended)
+
+Each agent posts its activity to Discord channels so the whole team is visible:
+
+```bash
+# Install the Discord poster script
+chmod +x ~/.openclaw/discord-post.py
+
+# Test it
+python3 ~/.openclaw/discord-post.py Archie "🧪 Test" --channel <your-channel-id>
+```
+
+See the [Discord Setup](#discord-setup) section for full details.
+
+### Directory Structure
+
+```
+~/.openclaw/
+├── workspace/               # Main agent (Milo) workspace
+│   ├── SOUL.md
+│   ├── AGENTS.md
+│   ├── skills/
+│   └── memory/
+├── agents/                  # Isolated agent state directories
+│   ├── main/
+│   ├── archie/
+│   ├── merc/
+│   └── ...                  # one per agent
+└── skills/                  # Shared skills
+    └── archimedes/
+        └── SKILL.md
+```
+
+### Quick Reference: Adding a New Agent
+
+1. **Create the skill file** at `~/.openclaw/skills/<agent-name>/SKILL.md`
+2. **Create the workspace** (optional):
+   ```bash
+   openclaw agents add <agent-name> --workspace ~/.openclaw/workspace/<agent-name>
+   ```
+3. **Add routing keywords** to the orchestrator's classification logic
+4. **Create Discord channels** (optional): output, logs, memory
+5. **Done** — the orchestrator can now spawn this agent
+
+---
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -68,14 +239,9 @@ User Request
     ┌──────────┼──────────┬───────────┬──────────┐
     ▼          ▼          ▼           ▼          ▼
 ┌────────┐ ┌───────┐ ┌───────┐ ┌────────┐ ┌───────┐
-│ Archie │ │ Merc  │ │ Eris  │ │  Atro  │ │  Herc │
-│Research│ │  Comms│ │Procure│ │Calendar│ │Health │
-└────────┘ └───┬───┘ └───┬───┘ └────────┘ └───┬───┘
-               │          │                    │
-               ▼          ▼                    ▼
-          ┌────────┐ ┌───────┐           ┌────────┐
-          │  Email │ │Instacart       │Reminders│
-          └────────┘ └───────┘           └────────┘
+│ Archie │ │ Merc  │ │ Eris  │ │  Atro  │ │ Herc  │
+│Research│ │  Comms│ │Procure│ │Calendar│ │ Health│
+└────────┘ └───────┘ └───────┘ └────────┘ └───────┘
 
     ┌──────────┐                    ┌────────┐
     │   Heph   │ ────────────────►  │  Theo  │
@@ -153,16 +319,17 @@ Agents communicate via a **mesh relay** (`http://192.168.0.247:8500/messages/sen
 
 ## Agents
 
-### Milo — Orchestrator
+### Milo — Orchestrator (Main Agent)
 
 The central orchestrator. All user requests flow through Milo first.
 
 - Intent classification and routing
+- Spawning subagents via `sessions_yield`
 - Task queue management
 - Escalation handling
 - Command center reporting
 
-### Archie — Research Agent
+### Archie — Research Agent (Spawned Subagent)
 
 Handles information retrieval and fact-finding tasks.
 
@@ -170,7 +337,7 @@ Handles information retrieval and fact-finding tasks.
 
 **Tools:** Web search, web fetch, fact-checking
 
-### Merc — Communications Agent
+### Merc — Communications Agent (Spawned Subagent)
 
 Handles all outbound communication.
 
@@ -178,7 +345,7 @@ Handles all outbound communication.
 
 **Tools:** Gmail, iMessage, Discord, LinkedIn
 
-### Eris — Procurement Agent
+### Eris — Procurement Agent (Spawned Subagent)
 
 Handles ordering and shopping tasks.
 
@@ -186,7 +353,7 @@ Handles ordering and shopping tasks.
 
 **Tools:** Instacart, Amazon
 
-### Atro — Calendar Agent
+### Atro — Calendar Agent (Spawned Subagent)
 
 Manages scheduling and reminders.
 
@@ -194,7 +361,7 @@ Manages scheduling and reminders.
 
 **Tools:** Apple Reminders, Google Calendar, Things 3
 
-### Herc — Health Agent
+### Herc — Health Agent (Spawned Subagent)
 
 Tracks wellness and nutrition.
 
@@ -202,7 +369,7 @@ Tracks wellness and nutrition.
 
 **Tools:** Diet tracker, health-tracker, walking reminders
 
-### Heph — Code Agent
+### Heph — Code Agent (Spawned Subagent)
 
 Handles programming and automation tasks.
 
@@ -212,7 +379,7 @@ Handles programming and automation tasks.
 
 > All Heph output is automatically routed to Theo for review before delivery.
 
-### Theo — Review Agent
+### Theo — Review Agent (Spawned Subagent)
 
 Quality assurance and code review.
 
@@ -229,7 +396,7 @@ Quality assurance and code review.
 ### Prerequisites
 
 | Dependency | Version | Purpose |
-|------------|---------|---------|
+|-----------|---------|---------|
 | OpenClaw | Latest | Agent orchestration framework |
 | Node.js | 18+ | Runtime |
 | Git | 2.30+ | Version control |
@@ -285,13 +452,19 @@ Quality assurance and code review.
 
 ---
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+## Discord Setup
+
+This system uses Discord as its **command center** — every agent posts delegation events, task completions, and errors to dedicated Discord channels. Before the system runs, you need a Discord server, a bot application, and all agents configured with their channel IDs.
 
 ---
 
-## Discord Setup
+### Server
 
-This system uses Discord as its **command center** — every agent posts delegation events, task completions, and errors to dedicated Discord channels. Before the system runs, you need a Discord server, a bot application per agent, and all channels configured.
+| Property | Value |
+|---|---|
+| **Server Name** | Milo's Enterprise |
+| **Server ID** | `1483891024974840038` |
+| **Bot App ID** | `1483871309677985953` |
 
 ---
 
@@ -303,141 +476,88 @@ This system uses Discord as its **command center** — every agent posts delegat
 
 ---
 
-### How to Get Your Discord Values
-
-This system uses three types of values you'll need to gather from Discord:
-
-#### 🆔 Getting Channel IDs
-
-**Option 1 — Copy from channel link (easiest)**
-1. Enable Developer Mode: `User Settings` → `Advanced` → `Developer Mode` (toggle ON)
-2. Right-click the channel name in the sidebar
-3. Select **Copy Channel ID**
-
-**Option 2 — Use a bot**
-1. Add a bot like `@username_to_id_bot` to your server
-2. Go to the channel and send a message like `@username_to_id_bot` with the channel mention
-3. The bot will reply with the channel ID
-
-**Option 3 — Group DM**
-1. Create a Group DM with the bot
-2. Right-click the group → **Copy ID** (requires Developer Mode)
-
-> **Note:** You must have Developer Mode enabled to copy IDs. Look for "Copy Channel ID" in the right-click menu.
-
-#### 🤖 Getting Bot Tokens
-
-1. Go to [discord.com/developers](https://discord.com/developers) → **Applications** → **New Application**
-2. Name your application (e.g., `Milo`) → click **Create**
-3. On the left sidebar, click **Bot**
-4. Click **Reset Token** to generate a new bot token
-5. **Copy and save the token immediately** — Discord only shows it once!
-
-> ⚠️ Never commit bot tokens to version control. Use a secrets manager or environment variables.
-
-#### 🏠 Getting Your Server ID
-
-1. Enable Developer Mode: `User Settings` → `Advanced` → `Developer Mode` (toggle ON)
-2. Right-click your server name in the sidebar
-3. Select **Copy Server ID**
-
----
-
 ### Step 1 — Create a Discord Application for Each Agent
 
-> ⚠️ **Important:** Each agent operates as its own independent Discord bot. You must create a **separate Discord application and bot token** for every agent (Milo, Archie, Merc, Eris, Atro, Herc, Heph, Theo). One bot per agent — they do not share tokens or applications.
-
-**Why separate bots?**
-- Each agent authenticates independently when posting to Discord
-- A single bot can only be in one place at a time — one bot means one agent
-- Isolation prevents permission conflicts and makes debugging easier
-- Each agent controls only their own bot's actions
-
-**How to create one:**
+Each spawned agent needs its own Discord application and bot token. Create one application per agent: **Milo, Archie, Merc, Eris, Atro, Herc, Heph, Theo.**
 
 1. Go to [discord.com/developers](https://discord.com/developers) → **Applications** → **New Application**
-2. Give it a name matching the agent (e.g., `Milo`) → click **Create**
-3. On the left sidebar, click **Bot** → click **Reset Token** → **copy and save the token immediately** (Discord only shows it once!)
+2. Give it a name (e.g., `Archie`) → click **Create**
+3. On the left sidebar, click **Bot** → copy the **Token** (click **Reset Token** if none exists — Discord only shows it once)
 4. Click **OAuth2** → **URL Generator**
 5. Under **Scopes**, check: `bot`
 6. Under **Bot Permissions**, check: `Send Messages`, `Read Message History`, `Embed Links`
-7. Copy the generated **OAuth2 URL** and open it in your browser to add that bot to your server
+7. Copy the generated **OAuth2 URL** and open it in your browser to add the bot to your server
 
-**Repeat for all 8 agents.** You will end up with 8 separate bots in your server, one per agent. Store all tokens securely — you'll need them for the config file.
-
-> 💡 **Tip:** Keep your Discord Developer Portal tab open or copy tokens to a password manager as you go — Discord only shows each token once after generation.
+**Repeat for all 8 spawned agents.** Store each token securely — you'll need them all for the config file.
 
 ---
 
 ### Step 2 — Set Up Channels
 
-Create the following channels on your Discord server. The structure is:
-- **Command Center** — main hub for Milo's delegation and completion logs
-- **Round-table** — all-hands discussion channel
-- **Break Room** — off-topic and social channel
-- **Each agent has ONE output channel** — for their results and responses
+Each spawned agent has three dedicated channels:
 
-| Channel | Channel ID |
-|---|---|
-| **Command Center** (main hub) | `CHANNEL_ID_COMMAND_CENTER` |
-| **Round-table** (all-hands) | `CHANNEL_ID_ROUND_TABLE` |
-| **Break Room** (off-topic) | `CHANNEL_ID_BREAK_ROOM` |
-
-| Agent | Output Channel ID |
-|---|---|
-| **Archimedes** (archie) | `CHANNEL_ID_ARCHIE_OUTPUT` |
-| **Mercury** (merc) | `CHANNEL_ID_MERC_OUTPUT` |
-| **Eris** | `CHANNEL_ID_ERIS_OUTPUT` |
-| **Atropos** (atro) | `CHANNEL_ID_ATRO_OUTPUT` |
-| **Heracles** (herc) | `CHANNEL_ID_HERC_OUTPUT` |
-| **Hephaestus** (heph) | `CHANNEL_ID_HEPH_OUTPUT` |
-| **Themis** (theo) | `CHANNEL_ID_THEO_OUTPUT` |
+| Agent | Output Channel ID | Logs Channel ID | Memory Channel ID |
+|---|---|---|---|
+| **Command Center** (Milo) | `1483891285822537740` | — | — |
+| **Archimedes** (archie) | `1483891301773480017` | `1483893552877535354` | `1483893553993093231` |
+| **Mercury** (merc) | `1483891383700820132` | `1483893677301436507` | `1483893678073188417` |
+| **Eris** | `1483891385458491402` | `1483893679952232530` | `1483893681193746616` |
+| **Atropos** (atro) | `1483891386783629322` | `1483893682514956460` | `1483893683605475348` |
+| **Heracles** (herc) | `1483891388184526919` | `1483893684595458200` | `1483893685539176651` |
+| **Hephaestus** (heph) | `1483944411795816641` | — | — |
+| **Themis** (theo) | `1483944415985930300` | — | — |
 
 > Enable Developer Mode in Discord to right-click channels and **Copy Channel ID**.
 
 **Channel purpose:**
-- **Command Center** — Milo's delegation logs, completion reports, and system events
-- **Round-table** — all-hands discussion, agent-to-agent conversation
-- **Break Room** — off-topic, social, relaxation
-- **Output** — each agent's primary results and responses (one channel per agent)
+- **Output** — the spawned agent's primary results and responses
+- **Logs** — detailed execution logs for debugging
+- **Memory** — stores completed task context to prevent duplicate work
 
 ---
 
 ### Step 3 — Configure the Token and Channel File
 
-Create `~/.openclaw/agent-bot-tokens.json`. Replace all placeholder values with your actual IDs and tokens:
+Create `~/.openclaw/agent-bot-tokens.json`:
 
 ```json
 {
-  "guild_id": "YOUR_SERVER_ID",
-  "round_table_channel": "CHANNEL_ID_ROUND_TABLE",
-  "break_room_channel": "CHANNEL_ID_BREAK_ROOM",
+  "guild_id": "1483891024974840038",
+  "round_table_channel": "1483982757523750942",
   "bots": {
-    "Milo":    "BOT_TOKEN_MILO",
-    "Archie":  "BOT_TOKEN_ARCHIE",
-    "Merc":    "BOT_TOKEN_MERC",
-    "Eris":    "BOT_TOKEN_ERIS",
-    "Atro":    "BOT_TOKEN_ATRO",
-    "Herc":    "BOT_TOKEN_HERC",
-    "Heph":    "BOT_TOKEN_HEPH",
-    "Theo":    "BOT_TOKEN_THEO"
+    "Milo":    "YOUR_MILO_BOT_TOKEN",
+    "Archie":  "YOUR_ARCHIE_BOT_TOKEN",
+    "Merc":    "YOUR_MERC_BOT_TOKEN",
+    "Eris":    "YOUR_ERIS_BOT_TOKEN",
+    "Atro":    "YOUR_ATRO_BOT_TOKEN",
+    "Herc":    "YOUR_HERC_BOT_TOKEN",
+    "Heph":    "YOUR_HEPH_BOT_TOKEN",
+    "Theo":    "YOUR_THEO_BOT_TOKEN"
   },
   "channels": {
-    "command-center":  "CHANNEL_ID_COMMAND_CENTER",
-    "round-table":     "CHANNEL_ID_ROUND_TABLE",
-    "break-room":      "CHANNEL_ID_BREAK_ROOM",
-    "archie-output":   "CHANNEL_ID_ARCHIE_OUTPUT",
-    "merc-output":     "CHANNEL_ID_MERC_OUTPUT",
-    "eris-output":     "CHANNEL_ID_ERIS_OUTPUT",
-    "atro-output":     "CHANNEL_ID_ATRO_OUTPUT",
-    "herc-output":     "CHANNEL_ID_HERC_OUTPUT",
-    "heph-output":     "CHANNEL_ID_HEPH_OUTPUT",
-    "theo-output":     "CHANNEL_ID_THEO_OUTPUT"
+    "command-center":        "1483891285822537740",
+    "archie-output":          "1483891301773480017",
+    "archie-logs":           "1483893552877535354",
+    "archie-memory":         "1483893553993093231",
+    "merc-output":           "1483891383700820132",
+    "merc-logs":             "1483893677301436507",
+    "merc-memory":           "1483893678073188417",
+    "eris-output":           "1483891385458491402",
+    "eris-logs":             "1483893679952232530",
+    "eris-memory":          "1483893681193746616",
+    "atro-output":           "1483891386783629322",
+    "atro-logs":             "1483893682514956460",
+    "atro-memory":          "1483893683605475348",
+    "herc-output":           "1483891388184526919",
+    "herc-logs":             "1483893684595458200",
+    "herc-memory":          "1483893685539176651",
+    "heph-output":           "1483944411795816641",
+    "theo-output":           "1483944415985930300",
+    "round-table":           "1483982757523750942",
+    "break-room":            "1485043346132045824"
   }
 }
 ```
-
-> ⚠️ **Keep this file secure.** It contains bot tokens. Never commit it to version control.
 
 ---
 
@@ -522,7 +642,7 @@ chmod +x ~/.openclaw/discord-post.py
 
 **Verify it works:**
 ```bash
-python3 ~/.openclaw/discord-post.py Milo "🧪 Test" --channel CHANNEL_ID_COMMAND_CENTER
+python3 ~/.openclaw/discord-post.py Milo "🧪 Test" --channel 1483891285822537740
 ```
 
 If you get `403 Forbidden` — the bot lacks **Send Messages** permission in that channel. Go to the channel → **Edit Channel** → **Permissions** → grant the bot role `Send Messages`.
@@ -537,50 +657,61 @@ The delegation system runs on a strict command-and-report loop:
 1. User posts in #command-center
         │
         ▼
-2. Milo analyzes intent → routes to specialist agent
+2. Milo analyzes intent → routes to specialist spawned agent
         │
         ▼
-3. Agent posts results to its OUTPUT channel
+3. Spawned agent posts to its OUTPUT channel (what it did)
         │
         ▼
-4. Milo posts completion summary back to #command-center
+4. Spawned agent updates MEMORY channel (prevents duplicate work)
+        │
+        ▼
+5. Milo posts completion summary back to #command-center
 ```
 
 ---
 
 ### How Each Agent Posts
 
-#### Milo — `#🎯-command-center`
+#### Milo — `#🎯-command-center` (`1483891285822537740`)
 
 ```bash
 # Before delegating
 python3 ~/.openclaw/discord-post.py Milo "🎯 DELEGATING
 Task: [user request]
 To: [agent name]
-Instructions: [what you told them]" --channel CHANNEL_ID_COMMAND_CENTER
+Instructions: [what you told them]" --channel 1483891285822537740
 
 # After task completes
 python3 ~/.openclaw/discord-post.py Milo "🎯 COMPLETE
 Task: [original task]
 Agent: [who did it]
-Result: [outcome]" --channel CHANNEL_ID_COMMAND_CENTER
+Result: [outcome]" --channel 1483891285822537740
 ```
 
-#### Sub-agents — each has one output channel
+#### Spawned Sub-agents — each has 3 channels
 
 | Post | Where | When |
 |---|---|---|
 | **START** | Output channel | Before starting work |
+| **Progress / Logs** | Logs channel | During execution |
+| **Memory update** | Memory channel | After completion (prevents duplicate work) |
 | **COMPLETE** | Output channel | Final result |
 
 ```bash
-# Example: Archie handling a research task
+# Example: Archie (spawned subagent) handling a research task
 python3 ~/.openclaw/discord-post.py Archie "🔍 START
-Researching: [task]" --channel CHANNEL_ID_ARCHIE_OUTPUT
+Researching: [task]" --channel 1483891301773480017
+
+python3 ~/.openclaw/discord-post.py Archie "📋 LOG
+Steps taken: [what Archie did]" --channel 1483893552877535354
+
+python3 ~/.openclaw/discord-post.py Archie "🧠 MEMORY
+Task: [task summary] | Result: [outcome]" --channel 1483893553993093231
 
 python3 ~/.openclaw/discord-post.py Archie "✅ COMPLETE
 Task: [original request]
-Result: [findings]" --channel CHANNEL_ID_ARCHIE_OUTPUT
+Result: [findings]" --channel 1483891301773480017
 ```
 
 > **Hard rule:** If it's not in Discord, it didn't happen. Every delegation event must be logged.
@@ -592,7 +723,7 @@ Result: [findings]" --channel CHANNEL_ID_ARCHIE_OUTPUT
 | Layer | Tool | What it handles |
 |---|---|---|
 | **Human-visible coordination** | Discord channels | Activity logs, completion reports, error visibility |
-| **Internal task routing** | Mesh relay (`http://192.168.0.247:8500/messages/send`) | Task delegation from Milo → specialist agents |
+| **Internal task routing** | Mesh relay (`http://192.168.0.247:8500/messages/send`) | Task delegation from Milo → specialist spawned agents |
 
 **Mesh relay message envelope:**
 ```json
@@ -622,25 +753,33 @@ All Discord config lives in `~/.openclaw/agent-bot-tokens.json`:
 
 | Key | Description |
 |---|---|
-| `guild_id` | Your Discord server ID: `YOUR_SERVER_ID` |
+| `guild_id` | Server ID: `1483891024974840038` |
 | `bots.Milo` | Orchestrator bot token |
-| `bots.Archie` | Research agent bot token |
-| `bots.Merc` | Communications agent bot token |
-| `bots.Eris` | Procurement agent bot token |
-| `bots.Atro` | Calendar agent bot token |
-| `bots.Herc` | Wellness agent bot token |
-| `bots.Heph` | Code agent bot token |
-| `bots.Theo` | Review agent bot token |
-| `channels.command-center` | Main hub: `CHANNEL_ID_COMMAND_CENTER` |
-| `channels.round-table` | All-hands discussion: `CHANNEL_ID_ROUND_TABLE` |
-| `channels.break-room` | Off-topic: `CHANNEL_ID_BREAK_ROOM` |
-| `channels.archie-output` | Archie's output: `CHANNEL_ID_ARCHIE_OUTPUT` |
-| `channels.merc-output` | Merc's output: `CHANNEL_ID_MERC_OUTPUT` |
-| `channels.eris-output` | Eris's output: `CHANNEL_ID_ERIS_OUTPUT` |
-| `channels.atro-output` | Atro's output: `CHANNEL_ID_ATRO_OUTPUT` |
-| `channels.herc-output` | Herc's output: `CHANNEL_ID_HERC_OUTPUT` |
-| `channels.heph-output` | Heph's output: `CHANNEL_ID_HEPH_OUTPUT` |
-| `channels.theo-output` | Theo's output: `CHANNEL_ID_THEO_OUTPUT` |
+| `bots.Archie` | Research spawned agent bot token |
+| `bots.Merc` | Communications spawned agent bot token |
+| `bots.Eris` | Procurement spawned agent bot token |
+| `bots.Atro` | Calendar spawned agent bot token |
+| `bots.Herc` | Wellness spawned agent bot token |
+| `bots.Heph` | Code spawned agent bot token |
+| `bots.Theo` | Review spawned agent bot token |
+| `channels.command-center` | Milo's delegation log: `1483891285822537740` |
+| `channels.archie-output` | Archie's output: `1483891301773480017` |
+| `channels.archie-logs` | Archie's logs: `1483893552877535354` |
+| `channels.archie-memory` | Archie's memory: `1483893553993093231` |
+| `channels.merc-output` | Merc's output: `1483891383700820132` |
+| `channels.merc-logs` | Merc's logs: `1483893677301436507` |
+| `channels.merc-memory` | Merc's memory: `1483893678073188417` |
+| `channels.eris-output` | Eris's output: `1483891385458491402` |
+| `channels.eris-logs` | Eris's logs: `1483893679952232530` |
+| `channels.eris-memory` | Eris's memory: `1483893681193746616` |
+| `channels.atro-output` | Atro's output: `1483891386783629322` |
+| `channels.atro-logs` | Atro's logs: `1483893682514956460` |
+| `channels.atro-memory` | Atro's memory: `1483893683605475348` |
+| `channels.herc-output` | Herc's output: `1483891388184526919` |
+| `channels.herc-logs` | Herc's logs: `1483893684595458200` |
+| `channels.herc-memory` | Herc's memory: `1483893685539176651` |
+| `channels.heph-output` | Heph's output: `1483944411795816641` |
+| `channels.theo-output` | Theo's output: `1483944415985930300` |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -671,9 +810,9 @@ All Discord config lives in `~/.openclaw/agent-bot-tokens.json`:
 # Output: Delegation ID: uuid | Status: assigned
 ```
 
-### Delegation Flow (OpenClaw Skill)
+### Delegation Flow (OpenClaw)
 
-When Milo receives a user request:
+When Milo (the main orchestrator) receives a user request:
 
 ```
 User: "remind me to call mom at 5pm"
@@ -681,84 +820,19 @@ User: "remind me to call mom at 5pm"
 1. Milo analyzes → "remind me to call mom at 5pm"
 2. Intent classify → Calendar (confidence: 0.92)
 3. Check availability → Atro available (2/5 tasks)
-4. Delegate → Atro receives task
+4. Spawn subagent → Atro receives task via sessions_yield
 5. Execute → Atro creates reminder at 5pm
 6. Report → "Done! Reminder set for 5pm"
 ```
 
 ### Example Delegations
 
-| User Request | Agent | Result |
+| User Request | Spawned Agent | Result |
 |---|---|---|
 | "is it going to rain today?" | Archie | "No rain, 72°F sunny" |
 | "remind me to call mom at 5pm" | Atro | Reminder created |
 | "order more coffee" | Eris | Added to Instacart cart |
 | "write a script to backup my files" | Heph → Theo | Script created, reviewed, approved |
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
----
-
-## Configuration
-
-> ⚠️ **Discord configuration** (bot tokens, channel IDs, guild settings) is documented in full in the [Discord Setup](#discord-setup) section above. This section covers general task routing and intent classification configuration.
-
-### Priority Levels
-
-| Level | Description |
-|-------|-------------|
-| `urgent` | Immediate routing, interrupts queue |
-| `normal` | Standard FIFO within priority |
-| `low` | Background processing, lowest priority |
-
-### Intent Keywords
-
-Edit `SPEC.md` or the agent keyword tables to customize classification:
-
-| Agent | Keywords |
-|-------|----------|
-| Archie | research, find, look up, search, what is, who is, information |
-| Merc | email, inbox, unsubscribe, gmail, message, send, post |
-| Eris | order, buy, instacart, amazon, grocery, purchase, shop |
-| Atro | calendar, schedule, remind, event, appointment, invite |
-| Herc | water, walking, diet, calories, health, sleep, weight, nutrition |
-| Heph | code, build, fix, script, create, program, function, automation |
-| Theo | review, check, verify, audit, test, validate, approve |
-
-### Command Center
-
-All delegation events post to Discord `#🎯-command-center`.
-
-Full setup instructions are in [Discord Setup](#discord-setup). Quick reference:
-
-```bash
-python3 ~/.openclaw/discord-post.py Milo "YOUR_MESSAGE" --channel CHANNEL_ID_COMMAND_CENTER
-```
-
-Post types:
-- **DELEGATION** — when Milo routes a task to a specialist
-- **COMPLETION REPORT** — when a task finishes
-- **AUTONOMOUS DECISION** — when Milo makes a non-trivial decision
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
----
-
-## Skill Files
-
-```
-agent-delegation-system/
-├── README.md               # This file
-├── REQUIREMENTS.md         # System requirements and dependencies
-├── SPEC.md                 # Technical specification (intent classification, routing, error handling)
-├── TODO.md                 # Roadmap and planned features
-└── skill/
-    ├── SKILL.md            # Skill definition for OpenClaw
-    └── scripts/
-        ├── delegate.sh          # Route task to a specialist agent
-        ├── classify-intent.sh    # Classify user request → recommended agent
-        └── check-agent.sh        # Check if an agent is available
-```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
