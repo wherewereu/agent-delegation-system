@@ -5,7 +5,7 @@
 | Field | Value |
 |-------|-------|
 | **Name** | agent-delegation |
-| **Version** | 1.1.0 |
+| **Version** | 1.2.0 |
 | **Description** | Enables automatic task routing from Milo (main orchestrator) to specialist OpenClaw subagents based on intent classification |
 | **Author** | Milo Blake |
 | **Category** | orchestration |
@@ -111,12 +111,12 @@ Each subagent has **one output channel**. Three shared channels coordinate the t
 
 | Channel | ID | Purpose |
 |---------|-----|---------|
-| **Command Center** (Milo) | `YOUR_COMMAND_CENTER_CHANNEL_ID` | Delegation logs, completions, errors |
-| **Archie** (Research) | `YOUR_ARCHIE_OUTPUT_CHANNEL_ID` | Archie's task output |
-| **Merc** (Communications) | `YOUR_MERC_OUTPUT_CHANNEL_ID` | Merc's task output |
-| **Eris** (Procurement) | `YOUR_ERIS_OUTPUT_CHANNEL_ID` | Eris's task output |
-| **Atro** (Calendar) | `YOUR_ATRO_OUTPUT_CHANNEL_ID` | Atro's task output |
-| **Herc** (Health) | `YOUR_HERC_OUTPUT_CHANNEL_ID` | Herc's task output |
+| **Command Center** (Milo) | `1483891285822537740` | Delegation logs, completions, errors |
+| **Archie** (Research) | - | Archie's task output |
+| **Merc** (Communications) | - | Merc's task output |
+| **Eris** (Procurement) | - | Eris's task output |
+| **Atro** (Calendar) | - | Atro's task output |
+| **Herc** (Health) | - | Herc's task output |
 | **Heph** (Code) | `1483944411795816641` | Heph's task output |
 | **Theo** (Review) | `1483944415985930300` | Theo's task output |
 | **Round Table** | `1483982757523750942` | Multi-agent discussion |
@@ -124,20 +124,57 @@ Each subagent has **one output channel**. Three shared channels coordinate the t
 
 > No logs or memory channels. Each subagent posts its output directly to its single channel.
 
-## Command Center Posting (Milo)
+## ⚠️ DISCORD POSTING RULES — MANDATORY FOR ALL AGENTS
+
+### Milo — Command Center (#🎯-command-center, ID: 1483891285822537740)
+Post to command center BEFORE delegating ANY task to ANY agent.
+Post AFTER the task is complete with the result.
+
+```bash
+python3 /Users/justinedelano/.openclaw/discord-post.py Milo "YOUR_MESSAGE" --channel 1483891285822537740
+```
+
+Required format:
+```
+🎯 DELEGATING
+Task: [what Justine asked for]
+To: [agent name]
+Instructions: [what you told them]
+
+🎯 COMPLETE
+Task: [original task]
+Agent: [who did it]
+Result: [outcome]
+```
+
+### Sub-agents — Your output channel
+Every agent MUST post to its own Discord channel:
+- START of task: what you are about to do
+- END of task: what you did and the result
+- ERRORS: what went wrong and what you tried
+
+The discord-post.py script works from ANY context (Telegram, iMessage, cron).
+It is a direct Discord API call — channel spawn context does not affect it.
+
+### Hard rule: If it's not in Discord, it didn't happen.
+Justine cannot see what you're doing without Discord logs.
+Milo cannot supervise without Discord logs.
+No exceptions. No "I forgot." Log everything.
+
+### Command Center Posting (Milo)
 
 ```bash
 # Before spawning a subagent
-python3 ~/.openclaw/discord-post.py Milo "🎯 DELEGATING
+python3 /Users/justinedelano/.openclaw/discord-post.py Milo "🎯 DELEGATING
 Task: [user request]
 To: [subagent name]
-Instructions: [what you told them]" --channel YOUR_COMMAND_CENTER_CHANNEL_ID
+Instructions: [what you told them]" --channel 1483891285822537740
 
 # After subagent completes
-python3 ~/.openclaw/discord-post.py Milo "🎯 COMPLETE
+python3 /Users/justinedelano/.openclaw/discord-post.py Milo "🎯 COMPLETE
 Task: [original task]
 Agent: [who did it]
-Result: [outcome]" --channel YOUR_COMMAND_CENTER_CHANNEL_ID
+Result: [outcome]" --channel 1483891285822537740
 ```
 
 ## Subagent Output Posting
@@ -146,13 +183,19 @@ Each subagent posts to its own channel:
 
 ```bash
 # Start
-python3 ~/.openclaw/discord-post.py <AgentName> "🔍 START
+python3 /Users/justinedelano/.openclaw/discord-post.py <AgentName> "🔍 START
 Task: [what you're doing]" --channel <agent-channel-id>
 
 # Complete
-python3 ~/.openclaw/discord-post.py <AgentName> "✅ COMPLETE
+python3 /Users/justinedelano/.openclaw/discord-post.py <AgentName> "✅ COMPLETE
 Task: [original request]
 Result: [what you did/found]" --channel <agent-channel-id>
+
+# Errors
+python3 /Users/justinedelano/.openclaw/discord-post.py <AgentName> "❌ ERROR
+Task: [original request]
+Error: [what went wrong]
+Tried: [what you attempted]" --channel <agent-channel-id>
 ```
 
 ## Scripts
@@ -263,6 +306,12 @@ skill/
 ```
 
 ## Changelog
+
+### v1.2.0 (2026-03-21)
+- Updated Discord posting rules with correct channel IDs and script path
+- Added hard rule: "If it's not in Discord, it didn't happen"
+- Added error posting format for subagents
+- Made Command Center channel ID concrete: 1483891285822537740
 
 ### v1.1.0 (2026-03-21)
 - Updated channel structure: 1 output channel per subagent + Command Center + Round Table + Break Room
