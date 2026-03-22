@@ -41,7 +41,7 @@ echo "Delegating task to $AGENT..."
 echo "$MESSAGE_JSON"
 
 # Post to mesh relay if available
-if curl -s -X POST http://192.168.0.247:8500/messages/send \
+if curl -s -X POST http://MESH_RELAY_IP:8500/messages/send \
     -H "Content-Type: application/json" \
     -d "$MESSAGE_JSON" > /dev/null 2>&1; then
     echo "Task delegated successfully via mesh relay"

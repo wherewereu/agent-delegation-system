@@ -111,12 +111,12 @@ Each subagent has **one output channel**. Three shared channels coordinate the t
 
 | Channel | ID | Purpose |
 |---------|-----|---------|
-| **Command Center** (Milo) | `1483891285822537740` | Delegation logs, completions, errors |
-| **Archie** (Research) | `1483891301773480017` | Archie's task output |
-| **Merc** (Communications) | `1483891383700820132` | Merc's task output |
-| **Eris** (Procurement) | `1483891385458491402` | Eris's task output |
-| **Atro** (Calendar) | `1483891386783629322` | Atro's task output |
-| **Herc** (Health) | `1483891388184526919` | Herc's task output |
+| **Command Center** (Milo) | `YOUR_COMMAND_CENTER_CHANNEL_ID` | Delegation logs, completions, errors |
+| **Archie** (Research) | `YOUR_ARCHIE_OUTPUT_CHANNEL_ID` | Archie's task output |
+| **Merc** (Communications) | `YOUR_MERC_OUTPUT_CHANNEL_ID` | Merc's task output |
+| **Eris** (Procurement) | `YOUR_ERIS_OUTPUT_CHANNEL_ID` | Eris's task output |
+| **Atro** (Calendar) | `YOUR_ATRO_OUTPUT_CHANNEL_ID` | Atro's task output |
+| **Herc** (Health) | `YOUR_HERC_OUTPUT_CHANNEL_ID` | Herc's task output |
 | **Heph** (Code) | `1483944411795816641` | Heph's task output |
 | **Theo** (Review) | `1483944415985930300` | Theo's task output |
 | **Round Table** | `1483982757523750942` | Multi-agent discussion |
@@ -131,13 +131,13 @@ Each subagent has **one output channel**. Three shared channels coordinate the t
 python3 ~/.openclaw/discord-post.py Milo "🎯 DELEGATING
 Task: [user request]
 To: [subagent name]
-Instructions: [what you told them]" --channel 1483891285822537740
+Instructions: [what you told them]" --channel YOUR_COMMAND_CENTER_CHANNEL_ID
 
 # After subagent completes
 python3 ~/.openclaw/discord-post.py Milo "🎯 COMPLETE
 Task: [original task]
 Agent: [who did it]
-Result: [outcome]" --channel 1483891285822537740
+Result: [outcome]" --channel YOUR_COMMAND_CENTER_CHANNEL_ID
 ```
 
 ## Subagent Output Posting

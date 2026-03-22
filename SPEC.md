@@ -111,12 +111,12 @@ Subagent channels (one per agent):
 
 | Agent | Channel ID | Purpose |
 |-------|------------|---------|
-| Milo (Command Center) | `1483891285822537740` | Milo's delegation output |
-| Archie | `1483891301773480017` | Archie's task output |
-| Merc | `1483891383700820132` | Merc's task output |
-| Eris | `1483891385458491402` | Eris's task output |
-| Atro | `1483891386783629322` | Atro's task output |
-| Herc | `1483891388184526919` | Herc's task output |
+| Milo (Command Center) | `YOUR_COMMAND_CENTER_CHANNEL_ID` | Milo's delegation output |
+| Archie | `YOUR_ARCHIE_OUTPUT_CHANNEL_ID` | Archie's task output |
+| Merc | `YOUR_MERC_OUTPUT_CHANNEL_ID` | Merc's task output |
+| Eris | `YOUR_ERIS_OUTPUT_CHANNEL_ID` | Eris's task output |
+| Atro | `YOUR_ATRO_OUTPUT_CHANNEL_ID` | Atro's task output |
+| Herc | `YOUR_HERC_OUTPUT_CHANNEL_ID` | Herc's task output |
 | Heph | `1483944411795816641` | Heph's task output |
 | Theo | `1483944415985930300` | Theo's task output |
 | Round Table | `1483982757523750942` | Multi-agent discussion |

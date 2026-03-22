@@ -282,7 +282,7 @@ Tasks are classified using a **keyword-matching algorithm** with confidence scor
 
 ### Communication Protocol
 
-Agents communicate via a **mesh relay** (`http://192.168.0.247:8500/messages/send`) using a standardized JSON envelope:
+Agents communicate via a **mesh relay** (`http://MESH_RELAY_IP:8500/messages/send`) using a standardized JSON envelope:
 
 ```json
 {
@@ -425,7 +425,7 @@ Quality assurance and code review.
 
 4. **Configure mesh relay** (for inter-agent communication):
    ```
-   http://192.168.0.247:8500/messages/send
+   http://MESH_RELAY_IP:8500/messages/send
    ```
 
 5. **Create agent directories** with `SOUL.md` and `memory/` for each agent.
@@ -463,7 +463,7 @@ This system uses Discord as its **command center** — every agent posts delegat
 | Property | Value |
 |---|---|
 | **Server Name** | Milo's Enterprise |
-| **Server ID** | `1483891024974840038` |
+| **Server ID** | `YOUR_SERVER_ID` |
 | **Bot App ID** | `1483871309677985953` |
 
 ---
@@ -498,12 +498,12 @@ Each spawned agent has three dedicated channels:
 
 | Agent | Output Channel ID | Logs Channel ID | Memory Channel ID |
 |---|---|---|---|
-| **Command Center** (Milo) | `1483891285822537740` | — | — |
-| **Archimedes** (archie) | `1483891301773480017` | `1483893552877535354` | `1483893553993093231` |
-| **Mercury** (merc) | `1483891383700820132` | `1483893677301436507` | `1483893678073188417` |
-| **Eris** | `1483891385458491402` | `1483893679952232530` | `1483893681193746616` |
-| **Atropos** (atro) | `1483891386783629322` | `1483893682514956460` | `1483893683605475348` |
-| **Heracles** (herc) | `1483891388184526919` | `1483893684595458200` | `1483893685539176651` |
+| **Command Center** (Milo) | `YOUR_COMMAND_CENTER_CHANNEL_ID` | — | — |
+| **Archimedes** (archie) | `YOUR_ARCHIE_OUTPUT_CHANNEL_ID` | `YOUR_ARCHIE_LOGS_CHANNEL_ID` | `YOUR_ARCHIE_MEMORY_CHANNEL_ID` |
+| **Mercury** (merc) | `YOUR_MERC_OUTPUT_CHANNEL_ID` | `YOUR_MERC_LOGS_CHANNEL_ID` | `YOUR_MERC_MEMORY_CHANNEL_ID` |
+| **Eris** | `YOUR_ERIS_OUTPUT_CHANNEL_ID` | `YOUR_ERIS_LOGS_CHANNEL_ID` | `YOUR_ERIS_MEMORY_CHANNEL_ID` |
+| **Atropos** (atro) | `YOUR_ATRO_OUTPUT_CHANNEL_ID` | `YOUR_ATRO_LOGS_CHANNEL_ID` | `YOUR_ATRO_MEMORY_CHANNEL_ID` |
+| **Heracles** (herc) | `YOUR_HERC_OUTPUT_CHANNEL_ID` | `YOUR_HERC_LOGS_CHANNEL_ID` | `YOUR_HERC_MEMORY_CHANNEL_ID` |
 | **Hephaestus** (heph) | `1483944411795816641` | — | — |
 | **Themis** (theo) | `1483944415985930300` | — | — |
 
@@ -522,7 +522,7 @@ Create `~/.openclaw/agent-bot-tokens.json`:
 
 ```json
 {
-  "guild_id": "1483891024974840038",
+  "guild_id": "YOUR_SERVER_ID",
   "round_table_channel": "1483982757523750942",
   "bots": {
     "Milo":    "YOUR_MILO_BOT_TOKEN",
@@ -535,22 +535,22 @@ Create `~/.openclaw/agent-bot-tokens.json`:
     "Theo":    "YOUR_THEO_BOT_TOKEN"
   },
   "channels": {
-    "command-center":        "1483891285822537740",
-    "archie-output":          "1483891301773480017",
-    "archie-logs":           "1483893552877535354",
-    "archie-memory":         "1483893553993093231",
-    "merc-output":           "1483891383700820132",
-    "merc-logs":             "1483893677301436507",
-    "merc-memory":           "1483893678073188417",
-    "eris-output":           "1483891385458491402",
-    "eris-logs":             "1483893679952232530",
-    "eris-memory":          "1483893681193746616",
-    "atro-output":           "1483891386783629322",
-    "atro-logs":             "1483893682514956460",
-    "atro-memory":          "1483893683605475348",
-    "herc-output":           "1483891388184526919",
-    "herc-logs":             "1483893684595458200",
-    "herc-memory":          "1483893685539176651",
+    "command-center":        "YOUR_COMMAND_CENTER_CHANNEL_ID",
+    "archie-output":          "YOUR_ARCHIE_OUTPUT_CHANNEL_ID",
+    "archie-logs":           "YOUR_ARCHIE_LOGS_CHANNEL_ID",
+    "archie-memory":         "YOUR_ARCHIE_MEMORY_CHANNEL_ID",
+    "merc-output":           "YOUR_MERC_OUTPUT_CHANNEL_ID",
+    "merc-logs":             "YOUR_MERC_LOGS_CHANNEL_ID",
+    "merc-memory":           "YOUR_MERC_MEMORY_CHANNEL_ID",
+    "eris-output":           "YOUR_ERIS_OUTPUT_CHANNEL_ID",
+    "eris-logs":             "YOUR_ERIS_LOGS_CHANNEL_ID",
+    "eris-memory":          "YOUR_ERIS_MEMORY_CHANNEL_ID",
+    "atro-output":           "YOUR_ATRO_OUTPUT_CHANNEL_ID",
+    "atro-logs":             "YOUR_ATRO_LOGS_CHANNEL_ID",
+    "atro-memory":          "YOUR_ATRO_MEMORY_CHANNEL_ID",
+    "herc-output":           "YOUR_HERC_OUTPUT_CHANNEL_ID",
+    "herc-logs":             "YOUR_HERC_LOGS_CHANNEL_ID",
+    "herc-memory":          "YOUR_HERC_MEMORY_CHANNEL_ID",
     "heph-output":           "1483944411795816641",
     "theo-output":           "1483944415985930300",
     "round-table":           "1483982757523750942",
@@ -642,7 +642,7 @@ chmod +x ~/.openclaw/discord-post.py
 
 **Verify it works:**
 ```bash
-python3 ~/.openclaw/discord-post.py Milo "🧪 Test" --channel 1483891285822537740
+python3 ~/.openclaw/discord-post.py Milo "🧪 Test" --channel YOUR_COMMAND_CENTER_CHANNEL_ID
 ```
 
 If you get `403 Forbidden` — the bot lacks **Send Messages** permission in that channel. Go to the channel → **Edit Channel** → **Permissions** → grant the bot role `Send Messages`.
@@ -673,20 +673,20 @@ The delegation system runs on a strict command-and-report loop:
 
 ### How Each Agent Posts
 
-#### Milo — `#🎯-command-center` (`1483891285822537740`)
+#### Milo — `#🎯-command-center` (`YOUR_COMMAND_CENTER_CHANNEL_ID`)
 
 ```bash
 # Before delegating
 python3 ~/.openclaw/discord-post.py Milo "🎯 DELEGATING
 Task: [user request]
 To: [agent name]
-Instructions: [what you told them]" --channel 1483891285822537740
+Instructions: [what you told them]" --channel YOUR_COMMAND_CENTER_CHANNEL_ID
 
 # After task completes
 python3 ~/.openclaw/discord-post.py Milo "🎯 COMPLETE
 Task: [original task]
 Agent: [who did it]
-Result: [outcome]" --channel 1483891285822537740
+Result: [outcome]" --channel YOUR_COMMAND_CENTER_CHANNEL_ID
 ```
 
 #### Spawned Sub-agents — each has 3 channels
@@ -701,17 +701,17 @@ Result: [outcome]" --channel 1483891285822537740
 ```bash
 # Example: Archie (spawned subagent) handling a research task
 python3 ~/.openclaw/discord-post.py Archie "🔍 START
-Researching: [task]" --channel 1483891301773480017
+Researching: [task]" --channel YOUR_ARCHIE_OUTPUT_CHANNEL_ID
 
 python3 ~/.openclaw/discord-post.py Archie "📋 LOG
-Steps taken: [what Archie did]" --channel 1483893552877535354
+Steps taken: [what Archie did]" --channel YOUR_ARCHIE_LOGS_CHANNEL_ID
 
 python3 ~/.openclaw/discord-post.py Archie "🧠 MEMORY
-Task: [task summary] | Result: [outcome]" --channel 1483893553993093231
+Task: [task summary] | Result: [outcome]" --channel YOUR_ARCHIE_MEMORY_CHANNEL_ID
 
 python3 ~/.openclaw/discord-post.py Archie "✅ COMPLETE
 Task: [original request]
-Result: [findings]" --channel 1483891301773480017
+Result: [findings]" --channel YOUR_ARCHIE_OUTPUT_CHANNEL_ID
 ```
 
 > **Hard rule:** If it's not in Discord, it didn't happen. Every delegation event must be logged.
@@ -723,7 +723,7 @@ Result: [findings]" --channel 1483891301773480017
 | Layer | Tool | What it handles |
 |---|---|---|
 | **Human-visible coordination** | Discord channels | Activity logs, completion reports, error visibility |
-| **Internal task routing** | Mesh relay (`http://192.168.0.247:8500/messages/send`) | Task delegation from Milo → specialist spawned agents |
+| **Internal task routing** | Mesh relay (`http://MESH_RELAY_IP:8500/messages/send`) | Task delegation from Milo → specialist spawned agents |
 
 **Mesh relay message envelope:**
 ```json
@@ -753,7 +753,7 @@ All Discord config lives in `~/.openclaw/agent-bot-tokens.json`:
 
 | Key | Description |
 |---|---|
-| `guild_id` | Server ID: `1483891024974840038` |
+| `guild_id` | Server ID: `YOUR_SERVER_ID` |
 | `bots.Milo` | Orchestrator bot token |
 | `bots.Archie` | Research spawned agent bot token |
 | `bots.Merc` | Communications spawned agent bot token |
@@ -762,22 +762,22 @@ All Discord config lives in `~/.openclaw/agent-bot-tokens.json`:
 | `bots.Herc` | Wellness spawned agent bot token |
 | `bots.Heph` | Code spawned agent bot token |
 | `bots.Theo` | Review spawned agent bot token |
-| `channels.command-center` | Milo's delegation log: `1483891285822537740` |
-| `channels.archie-output` | Archie's output: `1483891301773480017` |
-| `channels.archie-logs` | Archie's logs: `1483893552877535354` |
-| `channels.archie-memory` | Archie's memory: `1483893553993093231` |
-| `channels.merc-output` | Merc's output: `1483891383700820132` |
-| `channels.merc-logs` | Merc's logs: `1483893677301436507` |
-| `channels.merc-memory` | Merc's memory: `1483893678073188417` |
-| `channels.eris-output` | Eris's output: `1483891385458491402` |
-| `channels.eris-logs` | Eris's logs: `1483893679952232530` |
-| `channels.eris-memory` | Eris's memory: `1483893681193746616` |
-| `channels.atro-output` | Atro's output: `1483891386783629322` |
-| `channels.atro-logs` | Atro's logs: `1483893682514956460` |
-| `channels.atro-memory` | Atro's memory: `1483893683605475348` |
-| `channels.herc-output` | Herc's output: `1483891388184526919` |
-| `channels.herc-logs` | Herc's logs: `1483893684595458200` |
-| `channels.herc-memory` | Herc's memory: `1483893685539176651` |
+| `channels.command-center` | Milo's delegation log: `YOUR_COMMAND_CENTER_CHANNEL_ID` |
+| `channels.archie-output` | Archie's output: `YOUR_ARCHIE_OUTPUT_CHANNEL_ID` |
+| `channels.archie-logs` | Archie's logs: `YOUR_ARCHIE_LOGS_CHANNEL_ID` |
+| `channels.archie-memory` | Archie's memory: `YOUR_ARCHIE_MEMORY_CHANNEL_ID` |
+| `channels.merc-output` | Merc's output: `YOUR_MERC_OUTPUT_CHANNEL_ID` |
+| `channels.merc-logs` | Merc's logs: `YOUR_MERC_LOGS_CHANNEL_ID` |
+| `channels.merc-memory` | Merc's memory: `YOUR_MERC_MEMORY_CHANNEL_ID` |
+| `channels.eris-output` | Eris's output: `YOUR_ERIS_OUTPUT_CHANNEL_ID` |
+| `channels.eris-logs` | Eris's logs: `YOUR_ERIS_LOGS_CHANNEL_ID` |
+| `channels.eris-memory` | Eris's memory: `YOUR_ERIS_MEMORY_CHANNEL_ID` |
+| `channels.atro-output` | Atro's output: `YOUR_ATRO_OUTPUT_CHANNEL_ID` |
+| `channels.atro-logs` | Atro's logs: `YOUR_ATRO_LOGS_CHANNEL_ID` |
+| `channels.atro-memory` | Atro's memory: `YOUR_ATRO_MEMORY_CHANNEL_ID` |
+| `channels.herc-output` | Herc's output: `YOUR_HERC_OUTPUT_CHANNEL_ID` |
+| `channels.herc-logs` | Herc's logs: `YOUR_HERC_LOGS_CHANNEL_ID` |
+| `channels.herc-memory` | Herc's memory: `YOUR_HERC_MEMORY_CHANNEL_ID` |
 | `channels.heph-output` | Heph's output: `1483944411795816641` |
 | `channels.theo-output` | Theo's output: `1483944415985930300` |
 
