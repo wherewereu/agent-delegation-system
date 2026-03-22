@@ -1,9 +1,19 @@
 # Agent Delegation System - Technical Specification
 
+## What Are OpenClaw Subagents?
+
+This system is built on **OpenClaw subagents** (spawned agents). An OpenClaw subagent is a session spawned by the main orchestrator agent using the `sessions_yield` tool. Each subagent:
+- Has its own `SKILL.md` defining its role, behavior, and rules
+- Receives a task prompt and context from the main agent
+- Operates within its own workspace / skill context
+- Returns results back to the orchestrator
+
+The main agent (Milo) is always the entry point for user requests. It classifies the intent and spawns the appropriate subagent to handle the task.
+
 ## Intent Classifier Logic
 
 ### Overview
-The intent classifier analyzes natural language input and determines the appropriate specialist agent to handle the request.
+The intent classifier analyzes natural language input and determines the appropriate specialist subagent to handle the request.
 
 ### Classification Algorithm
 
@@ -27,7 +37,7 @@ Output: Agent assignment + confidence score
      - Escalate to human review if tie persists
 
 4. Confidence Threshold
-   - >= 0.7: Auto-delegate
+   - >= 0.7: Auto-delegate (spawn subagent immediately)
    - 0.4-0.69: Flag for review, still delegate
    - < 0.4: Escalate to Milo for manual routing
 ```
@@ -36,14 +46,23 @@ Output: Agent assignment + confidence score
 | Category | Primary Keywords | Weight |
 |----------|-----------------|--------|
 | Research | research, find, look up, search, what is, who is | 1.0 |
-| Email | email, inbox, unsubscribe, gmail, mail, message | 1.0 |
-| Shopping | order, buy, instacart, amazon, grocery, purchase | 1.0 |
+| Communications | email, inbox, unsubscribe, gmail, mail, message, send, post | 1.0 |
+| Procurement | order, buy, instacart, amazon, grocery, purchase, shop | 1.0 |
 | Calendar | calendar, schedule, remind, event, appointment | 1.0 |
-| Health | water, walking, diet, calories, health, sleep, weight | 1.0 |
-| Code | code, build, fix, script, create, programming | 1.0 |
-| Review | review, check, verify, audit, test, validate | 1.0 |
+| Health | water, walking, diet, calories, health, sleep, weight, nutrition | 1.0 |
+| Code | code, build, fix, script, create, programming, function, automation | 1.0 |
+| Review | review, check, verify, audit, test, validate, approve | 1.0 |
 
 ## Agent Routing Rules
+
+### Spawning via sessions_yield
+
+When Milo delegates, it calls `sessions_yield` with:
+- `skill`: the subagent's skill name (e.g., "archie")
+- `prompt`: the task description and context
+- `label`: a session label for tracking
+
+The subagent session is created, loads its `SKILL.md`, executes the task, and returns results to Milo.
 
 ### Routing Priority Matrix
 ```
@@ -63,9 +82,9 @@ Output: Agent assignment + confidence score
 ### Routing Flow
 1. Classify intent → get agent category
 2. Check agent availability (concurrent task limit)
-3. If available → delegate immediately
-4. If busy → queue with priority
-5. If agent offline → fallback to secondary agent or Milo
+3. Spawn subagent via `sessions_yield`
+4. Monitor subagent completion
+5. Return results to user
 
 ### Fallback Routing
 | Primary Agent | Fallback Agent |
@@ -77,6 +96,31 @@ Output: Agent assignment + confidence score
 | Herc | Milo (manual) |
 | Heph | Theo |
 | Theo | Milo (manual) |
+
+## Discord Channel Structure
+
+Each OpenClaw subagent has **one output channel**. Three shared channels coordinate the whole team:
+
+| Channel | Purpose |
+|---------|---------|
+| **Command Center** | Delegation logs, completion reports, errors (Milo posts here) |
+| **Round Table** | Multi-agent discussion and coordination |
+| **Break Room** | Off-topic and social chatter |
+
+Subagent channels (one per agent):
+
+| Agent | Channel ID | Purpose |
+|-------|------------|---------|
+| Milo (Command Center) | `1483891285822537740` | Milo's delegation output |
+| Archie | `1483891301773480017` | Archie's task output |
+| Merc | `1483891383700820132` | Merc's task output |
+| Eris | `1483891385458491402` | Eris's task output |
+| Atro | `1483891386783629322` | Atro's task output |
+| Herc | `1483891388184526919` | Herc's task output |
+| Heph | `1483944411795816641` | Heph's task output |
+| Theo | `1483944415985930300` | Theo's task output |
+| Round Table | `1483982757523750942` | Multi-agent discussion |
+| Break Room | `1485043346132045824` | Off-topic / social |
 
 ## Communication Protocols
 
@@ -92,7 +136,7 @@ Output: Agent assignment + confidence score
     "user_request": "string",
     "context": {},
     "priority": "normal|urgent|low",
-    "callback_channel": "telegram"
+    "callback_channel": "discord"
   },
   "status": "pending|assigned|completed|failed"
 }
@@ -103,11 +147,8 @@ Output: Agent assignment + confidence score
 - **Retry policy**: 3 attempts with exponential backoff
 - **Timeout**: 30 seconds for agent acknowledgment
 
-### Status Updates
-Agents report status via:
-1. Direct callback to Milo
-2. Write to shared memory file
-3. Discord command center notification
+### Discord Posting Rules
+Every spawned agent posts to its own output channel. Milo's Command Center posts the delegation start and completion. This is the audit trail — **if it's not in Discord, it didn't happen**.
 
 ## Error Handling
 
@@ -115,7 +156,7 @@ Agents report status via:
 
 | Error Type | Detection | Response |
 |------------|-----------|----------|
-| Agent timeout | No response in 30s | Re-queue or escalate |
+| Subagent timeout | No response in 30s | Re-queue or escalate |
 | Agent unavailable | Max concurrent reached | Queue with priority |
 | Classification failure | Confidence < 0.4 | Escalate to Milo |
 | Communication failure | Message delivery failed | Retry 3x, then alert |
@@ -123,7 +164,7 @@ Agents report status via:
 
 ### Recovery Procedures
 
-1. **Agent Timeout**
+1. **Subagent Timeout**
    ```
    1. Increment retry counter
    2. If retries < 3: re-delegate to same agent
@@ -148,20 +189,22 @@ Agents report status via:
 
 ## Memory Architecture
 
-### Agent Memory Files
-Each agent maintains:
-- `memory/YYYY-MM-DD.md` - Daily activity log
-- `MEMORY.md` - Long-term context
-- `SOUL.md` - Persona and behavior rules
+Each subagent maintains its own memory via its workspace:
 
-### Shared State
-- `memory/delegation-queue.json` - Pending tasks
-- `memory/agent-status.json` - Agent availability
-- `memory/routing-log.md` - Delegation history
+- `memory/YYYY-MM-DD.md` — Daily activity log
+- `MEMORY.md` — Long-term context (subagent-specific)
+- `SOUL.md` — Persona and behavior rules
+
+Milo maintains:
+- `memory/delegation-queue.md` — Pending tasks
+- `memory/routing-log.md` — Delegation history
+
+Discord Round Table channel serves as the human-visible coordination log for multi-agent discussions.
 
 ## Security Considerations
 
-- Agents only access authorized resources per SOUL.md
-- No cross-agent data sharing without explicit context
-- All external actions require user consent (except routing)
-- Audit log maintained for all delegations
+- Subagents only access authorized resources per their `SOUL.md` / `SKILL.md`
+- No cross-agent data sharing without explicit context passed in the task prompt
+- All external actions require user consent (except internal routing)
+- Audit log maintained in Command Center for all delegations
+- Discord tokens stored in `~/.openclaw/agent-bot-tokens.json` (not committed to repo)

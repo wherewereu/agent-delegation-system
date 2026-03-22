@@ -5,16 +5,26 @@
 | Field | Value |
 |-------|-------|
 | **Name** | agent-delegation |
-| **Version** | 1.0.0 |
-| **Description** | Enables automatic task routing from Milo to specialist agents based on intent classification |
+| **Version** | 1.1.0 |
+| **Description** | Enables automatic task routing from Milo (main orchestrator) to specialist OpenClaw subagents based on intent classification |
 | **Author** | Milo Blake |
 | **Category** | orchestration |
-| **Tags** | delegation, routing, multi-agent, orchestration |
+| **Tags** | delegation, routing, multi-agent, orchestration, subagent, spawned-agent |
 | **Triggers** | delegation request, task routing, agent coordination |
 
 ## Overview
 
-This skill enables Milo to automatically analyze incoming user requests and delegate tasks to the appropriate specialist agent without requiring manual routing decisions.
+This skill enables Milo (the main orchestrator agent) to automatically analyze incoming user requests and spawn the appropriate specialist subagent to handle the task — without manual routing decisions.
+
+## What Are OpenClaw Subagents?
+
+The specialist agents (Archie, Merc, Eris, etc.) are **OpenClaw subagents** (also called *spawned agents*). They are not separate programs — they are sessions created by Milo using the `sessions_yield` tool. Each subagent:
+- Has its own `SKILL.md` defining its role, behavior, and rules
+- Receives a task from Milo with context and instructions
+- Posts its output to its own Discord channel
+- Returns results to Milo when complete
+
+Milo (the main agent) is the orchestrator. All user requests come to Milo first. Milo classifies the intent, spawns the right subagent, and delivers the result.
 
 ## Usage
 
@@ -23,26 +33,26 @@ This skill enables Milo to automatically analyze incoming user requests and dele
 Use this skill when:
 - User submits a task that needs specialist handling
 - A task requires research, email, shopping, calendar, health, coding, or review
-- Cross-agent coordination is needed
-- You need to verify which agent should handle a request
+- Cross-subagent coordination is needed
+- You need to verify which subagent should handle a request
 
 ### How to Use
 
-1. **Analyze the request** - Identify task type from user input
-2. **Classify intent** - Match against trigger keywords
-3. **Check availability** - Verify agent is available
-4. **Delegate** - Route to appropriate specialist
-5. **Monitor** - Track task completion
-6. **Report** - Return results to user
+1. **Analyze the request** — Identify task type from user input
+2. **Classify intent** — Match against trigger keywords
+3. **Check availability** — Verify subagent is available
+4. **Spawn subagent** — Use `sessions_yield` to hand off the task
+5. **Monitor** — Track subagent completion
+6. **Report** — Return results to user
 
 ## Intent Classification
 
-### Trigger Keywords by Agent
+### Trigger Keywords by Subagent
 
-| Agent | Keywords |
-|-------|----------|
+| Subagent | Keywords |
+|----------|----------|
 | Archie (Research) | research, find, look up, search, what is, who is, information |
-| Merc (Communications) | email, inbox, unsubscribe, gmail, message, send, post |
+| Merc (Communications) | email, inbox, unsubscribe, gmail, message, send, post, linkedin |
 | Eris (Procurement) | order, buy, instacart, amazon, grocery, purchase, shop |
 | Atro (Calendar) | calendar, schedule, remind, event, appointment, invite |
 | Herc (Health) | water, walking, diet, calories, health, sleep, weight, nutrition |
@@ -53,9 +63,9 @@ Use this skill when:
 
 | Score | Action |
 |-------|--------|
-| 0.7+ | Auto-delegate immediately |
-| 0.4-0.69 | Delegate with monitoring |
-| < 0.4 | Escalate to Milo for manual routing |
+| 0.7+ | Auto-spawn subagent immediately |
+| 0.4-0.69 | Spawn with monitoring |
+| < 0.4 | Milo handles manually |
 
 ## Delegation Flow
 
@@ -68,49 +78,101 @@ User Request
 └──────┬──────┘
     │
     ▼
-┌─────────────────┐
-│ Intent Classify │
-└──────┬──────────┘
+┌─────────────────────┐
+│ Intent Classify     │
+└──────┬──────────────┘
     │
     ▼
-┌─────────────────┐
-│ Route to Agent  │
-└──────┬──────────┘
+┌─────────────────────┐
+│ Spawn Subagent      │  ← sessions_yield
+│ (Archie, Merc, etc) │
+└──────┬──────────────┘
     │
     ▼
-┌─────────────────┐
-│ Execute Task    │
-└──────┬──────────┘
+┌─────────────────────┐
+│ Subagent Executes   │
+│ Posts to its channel │
+└──────┬──────────────┘
     │
     ▼
-┌─────────────────┐
-│ Verify (if Heph)│──► Theo Review
-└──────┬──────────┘
+┌─────────────────────┐
+│ Verify (if Heph)    │──► Theo Review
+└──────┬──────────────┘
     │
     ▼
-┌─────────────────┐
-│ Report Back     │
-└─────────────────┘
+┌─────────────────────┐
+│ Milo Reports Back   │
+└─────────────────────┘
+```
+
+## Discord Channels — One Per Subagent
+
+Each subagent has **one output channel**. Three shared channels coordinate the team:
+
+| Channel | ID | Purpose |
+|---------|-----|---------|
+| **Command Center** (Milo) | `1483891285822537740` | Delegation logs, completions, errors |
+| **Archie** (Research) | `1483891301773480017` | Archie's task output |
+| **Merc** (Communications) | `1483891383700820132` | Merc's task output |
+| **Eris** (Procurement) | `1483891385458491402` | Eris's task output |
+| **Atro** (Calendar) | `1483891386783629322` | Atro's task output |
+| **Herc** (Health) | `1483891388184526919` | Herc's task output |
+| **Heph** (Code) | `1483944411795816641` | Heph's task output |
+| **Theo** (Review) | `1483944415985930300` | Theo's task output |
+| **Round Table** | `1483982757523750942` | Multi-agent discussion |
+| **Break Room** | `1485043346132045824` | Off-topic / social |
+
+> No logs or memory channels. Each subagent posts its output directly to its single channel.
+
+## Command Center Posting (Milo)
+
+```bash
+# Before spawning a subagent
+python3 ~/.openclaw/discord-post.py Milo "🎯 DELEGATING
+Task: [user request]
+To: [subagent name]
+Instructions: [what you told them]" --channel 1483891285822537740
+
+# After subagent completes
+python3 ~/.openclaw/discord-post.py Milo "🎯 COMPLETE
+Task: [original task]
+Agent: [who did it]
+Result: [outcome]" --channel 1483891285822537740
+```
+
+## Subagent Output Posting
+
+Each subagent posts to its own channel:
+
+```bash
+# Start
+python3 ~/.openclaw/discord-post.py <AgentName> "🔍 START
+Task: [what you're doing]" --channel <agent-channel-id>
+
+# Complete
+python3 ~/.openclaw/discord-post.py <AgentName> "✅ COMPLETE
+Task: [original request]
+Result: [what you did/found]" --channel <agent-channel-id>
 ```
 
 ## Scripts
 
 ### `delegate.sh`
-Routes a task to the specified agent.
+Routes a task to the specified subagent via mesh relay.
 
 ```bash
 ./delegate.sh <agent> <task_description> [priority]
 ```
 
 ### `classify-intent.sh`
-Classifies a user request and returns recommended agent.
+Classifies a user request and returns the recommended subagent.
 
 ```bash
 ./classify-intent.sh "<user_request>"
 ```
 
 ### `check-agent.sh`
-Checks if an agent is available.
+Checks if a subagent is available.
 
 ```bash
 ./check-agent.sh <agent_name>
@@ -121,44 +183,44 @@ Checks if an agent is available.
 ### Example 1: Research Task
 ```
 User: "is it going to rain today?"
-Classification: Research (Archie)
-Delegation: Archie → web_search("weather today")
+Classification: Research (Archie, confidence: 0.85)
+Milo spawns Archie → Archie web_searches weather
 Result: "No rain today, 72°F sunny"
 ```
 
 ### Example 2: Calendar Task
 ```
 User: "remind me to call mom at 5pm"
-Classification: Calendar (Atro)
-Delegation: Atro → create_reminder("call mom", 5pm)
+Classification: Calendar (Atro, confidence: 0.92)
+Milo spawns Atro → Atro creates reminder
 Result: Reminder set for 5pm
 ```
 
 ### Example 3: Shopping Task
 ```
 User: "order more coffee"
-Classification: Shopping (Eris)
-Delegation: Eris → instacart_add("coffee")
+Classification: Procurement (Eris, confidence: 0.88)
+Milo spawns Eris → Eris adds to Instacart
 Result: Added to Instacart cart
 ```
 
 ### Example 4: Code Task with Review
 ```
 User: "write a script to backup my files"
-Classification: Code (Heph)
-Delegation: Heph → write_script("backup.sh")
+Classification: Code (Heph, confidence: 0.90)
+Milo spawns Heph → Heph writes script
 After completion:
-    Theo reviews → APPROVED
-Result: Script created and verified
+    Milo spawns Theo → Theo reviews
+Result: Script created and verified APPROVED
 ```
 
 ## Configuration
 
-### Agent Availability
-Each agent has a max concurrent task limit:
+### Subagent Availability
+Each subagent has a max concurrent task limit:
 
-| Agent | Max Concurrent |
-|-------|---------------|
+| Subagent | Max Concurrent |
+|----------|----------------|
 | Archie | 3 |
 | Merc | 5 |
 | Eris | 2 |
@@ -176,43 +238,40 @@ Each agent has a max concurrent task limit:
 
 | Error | Response |
 |-------|----------|
-| Agent unavailable | Queue task, notify when agent free |
-| Agent timeout | Retry up to 3 times, then escalate |
-| Classification failure | Milo handles manually |
+| Subagent unavailable | Queue task, notify when agent free |
+| Subagent timeout | Retry up to 3 times, then escalate |
+| Classification failure (< 0.4) | Milo handles manually |
 | Task rejected | Re-route or Milo handles |
 
-## Memory Integration
+## Adding a New Subagent
 
-Agents maintain memory via:
-- `memory/YYYY-MM-DD.md` - Daily activity logs
-- `MEMORY.md` - Long-term context
-- Delegation history stored for learning
-
-## Command Center Integration
-
-All delegations are posted to Discord command center:
-- Delegation start notifications
-- Completion reports
-- Error alerts
-- Autonomous decisions
-
-Channel: #⚒️-code-output (ID: 1483891285822537740)
+1. **Create the skill file** at `~/.openclaw/skills/<name>/SKILL.md`
+2. **Create a Discord output channel** for the new subagent
+3. **Add the bot token** to `~/.openclaw/agent-bot-tokens.json`
+4. **Add routing keywords** to the intent classifier
+5. **Test** — Milo can now spawn this subagent via `sessions_yield`
 
 ## Skill Files
 
 ```
 skill/
-├── SKILL.md           # This file
+├── SKILL.md              # This file
 └── scripts/
-    ├── delegate.sh         # Route task to agent
-    ├── classify-intent.sh  # Classify user request
-    └── check-agent.sh      # Check agent availability
+    ├── delegate.sh       # Route task to subagent via mesh relay
+    ├── classify-intent.sh # Classify user request → recommended subagent
+    └── check-agent.sh    # Check subagent availability
 ```
 
 ## Changelog
 
+### v1.1.0 (2026-03-21)
+- Updated channel structure: 1 output channel per subagent + Command Center + Round Table + Break Room
+- Removed logs and memory channels
+- Added OpenClaw subagent context throughout
+- Clarified spawning via `sessions_yield`
+
 ### v1.0.0 (2026-03-21)
 - Initial release
 - Basic intent classification
-- 7 specialist agents
+- 7 specialist subagents
 - Command center integration

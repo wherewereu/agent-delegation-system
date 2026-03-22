@@ -1,5 +1,5 @@
 #!/bin/bash
-# delegate.sh - Route a task to the specified agent
+# delegate.sh - Route a task to the specified OpenClaw subagent via mesh relay
 # Usage: ./delegate.sh <agent> <task_description> [priority]
 # Example: ./delegate.sh archie "what is the weather today" normal
 
